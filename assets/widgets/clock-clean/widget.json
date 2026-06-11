@@ -1,0 +1,75 @@
+{
+    "id": "clock-clean",
+    "name": "Clean Clock",
+    "author": "Colorwall",
+    "version": "1.0.0",
+    "description": "a minimal time display with customizable font, size, and format",
+    "entry": "template.html",
+    "style": "style.css",
+    "script": "script.js",
+    "defaultPosition": { "x": "50%", "y": "8%" },
+    "draggable": true,
+    "dataBindings": ["time", "date"],
+    "fonts": [
+        { "family": "JetBrains Mono", "source": "google", "weights": [200, 300] },
+        { "family": "Orbitron", "source": "google", "weights": [300, 400, 700] },
+        { "family": "Rajdhani", "source": "google", "weights": [300, 400, 500] }
+    ],
+    "tweaks": {
+        "fontFamily": {
+            "type": "dropdown",
+            "text": "Font",
+            "value": "JetBrains Mono",
+            "items": [
+                { "label": "JetBrains Mono", "value": "JetBrains Mono" },
+                { "label": "Orbitron", "value": "Orbitron" },
+                { "label": "Rajdhani", "value": "Rajdhani" },
+                { "label": "Segoe UI", "value": "Segoe UI" }
+            ]
+        },
+        "fontSize": {
+            "type": "slider",
+            "text": "Size",
+            "value": 72,
+            "min": 24,
+            "max": 200,
+            "step": 2
+        },
+        "textColor": {
+            "type": "color",
+            "text": "Color",
+            "value": "#ffffff"
+        },
+        "opacity": {
+            "type": "slider",
+            "text": "Opacity",
+            "value": 80,
+            "min": 5,
+            "max": 100,
+            "step": 1
+        },
+        "is24h": {
+            "type": "checkbox",
+            "text": "24h Format",
+            "value": true
+        },
+        "showSeconds": {
+            "type": "checkbox",
+            "text": "Show Seconds",
+            "value": false
+        },
+        "showDate": {
+            "type": "checkbox",
+            "text": "Show Date",
+            "value": true
+        },
+        "letterSpacing": {
+            "type": "slider",
+            "text": "Letter Spacing",
+            "value": 6,
+            "min": 0,
+            "max": 30,
+            "step": 1
+        }
+    }
+}

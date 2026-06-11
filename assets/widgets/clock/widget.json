@@ -1,0 +1,13 @@
+{
+    "name": "Minimalist Clock",
+    "description": "A clean, modern typographic clock with day and date.",
+    "version": "1.0",
+    "author": "By Gemini!",
+    "defaultPosition": { "x": "100px", "y": "100px" },
+    "tweaks": {
+        "textColor": { "type": "color", "text": "Text Color", "value": "#ffffff" },
+        "fontSize": { "type": "slider", "text": "Size Scale", "value": 100, "min": 50, "max": 300, "step": 10 },
+        "glow": { "type": "checkbox", "text": "Neon Glow", "value": false },
+        "showCard": { "type": "checkbox", "text": "Glass Background", "value": false }
+    }
+}

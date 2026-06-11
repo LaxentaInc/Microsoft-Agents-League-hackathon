@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soundscape</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300;1,500&family=JetBrains+Mono:wght@200;300;400&display=swap"
+        rel="stylesheet">
+    <style>
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent: #c4b5fd;
+            --accent-glow: rgba(167, 139, 250, 0.35);
+            --accent-dim: rgba(167, 139, 250, 0.12);
+            --text-hi: rgba(255, 255, 255, 0.90);
+            --text-lo: rgba(255, 255, 255, 0.38);
+            --glass: rgba(8, 6, 18, 0.58);
+            --glass-edge: rgba(255, 255, 255, 0.07);
+            --shadow-color: #6d28d9;
+        }
+
+        body {
+            background: #000;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            cursor: none;
+        }
+
+        /* ── background ─────────────────────────────── */
+        #threejs-container {
+            position: fixed;
+            inset: 0;
+            transform: scale(1.12);
+            filter: blur(7px) brightness(0.65) saturate(1.3);
+            z-index: 0;
+        }
+
+        /* ── wave canvas ─────────────────────────────── */
+        #wave-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* ── clock ────────────────────────────────────── */
+        #clock {
+            position: fixed;
+            top: 7vh;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.6s ease;
+        }
+
+        #clock-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(52px, 9vw, 110px);
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.11);
+            letter-spacing: 0.12em;
+            line-height: 1;
+            font-variant-numeric: tabular-nums;
+        }
+
+        #clock-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(9px, 1vw, 12px);
+            font-weight: 300;
+            color: rgba(255, 255, 255, 0.07);
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            margin-top: 8px;
+        }
+
+        /* ── main card ────────────────────────────────── */
+        #card {
+            position: fixed;
+            bottom: 9vh;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            z-index: 20;
+
+            display: flex;
+            align-items: center;
+            gap: 18px;
+
+            background: var(--glass);
+            border: 1px solid var(--glass-edge);
+            border-radius: 22px;
+            padding: 14px 22px 14px 14px;
+
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
+
+            width: clamp(320px, 36vw, 480px);
+            max-width: 94vw;
+
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.07),
+                0 24px 64px rgba(0, 0, 0, 0.65),
+                0 0 0 1px rgba(0, 0, 0, 0.4),
+                0 0 48px var(--accent-glow);
+
+            opacity: 0;
+            transition: opacity 0.7s ease, box-shadow 0.5s ease;
+        }
+
+        #card.visible {
+            opacity: 1;
+            animation: card-rise 0.75s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes card-rise {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* ── album art ────────────────────────────────── */
+        #art-wrap {
+            position: relative;
+            flex-shrink: 0;
+            width: 68px;
+            height: 68px;
+        }
+
+        #art-ring {
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: conic-gradient(var(--accent) 0deg,
+                    transparent 120deg,
+                    var(--accent) 200deg,
+                    transparent 300deg,
+                    var(--accent) 360deg);
+            animation: ring-spin 4s linear infinite paused;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        #art-ring.playing {
+            opacity: 0.85;
+            animation-play-state: running;
+        }
+
+        @keyframes ring-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* mask ring so only the border shows */
+        #art-ring::after {
+            content: '';
+            position: absolute;
+            inset: 3px;
+            border-radius: 50%;
+            background: #080612;
+        }
+
+        #art-ring-glow {
+            position: absolute;
+            inset: -6px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--accent-glow) 0%, transparent 70%);
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        #art-ring-glow.playing {
+            opacity: 1;
+        }
+
+        #albumart {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            object-position: center;
+            z-index: 2;
+            display: block;
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        /* ── track info ────────────────────────────────── */
+        #track-info {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        #track-title {
+            font-family: 'Cormorant Garamond', 'Georgia', serif;
+            font-style: italic;
+            font-weight: 500;
+            font-size: clamp(16px, 1.6vw, 20px);
+            color: var(--text-hi);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.25;
+            letter-spacing: 0.01em;
+        }
+
+        #track-artist {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 300;
+            font-size: clamp(9px, 0.75vw, 11px);
+            color: var(--text-lo);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        /* scrub line */
+        #scrub {
+            margin-top: 9px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #scrub-track {
+            flex: 1;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.09);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        #scrub-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent);
+            border-radius: 2px;
+            box-shadow: 0 0 8px var(--accent);
+            transition: width 0.5s linear;
+        }
+
+        /* ── eq bars ───────────────────────────────────── */
+        #eq {
+            display: flex;
+            align-items: flex-end;
+            gap: 2.5px;
+            height: 30px;
+            flex-shrink: 0;
+            padding-bottom: 2px;
+        }
+
+        .eq-bar {
+            width: 3px;
+            border-radius: 2px 2px 1px 1px;
+            background: var(--accent);
+            min-height: 3px;
+            transition: height 0.09s ease-out;
+            box-shadow: 0 0 4px var(--accent-glow);
+        }
+
+        /* ── side spectrum line ────────────────────────── */
+        #spectrum-line {
+            position: fixed;
+            left: 5vw;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .spec-bar {
+            height: 2px;
+            border-radius: 2px;
+            background: var(--accent);
+            transition: width 0.08s ease;
+        }
+
+        /* ── right label ──────────────────────────────── */
+        #side-label {
+            position: fixed;
+            right: 4vw;
+            bottom: 12vh;
+            z-index: 10;
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.1);
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        /* ── top-left corner tag ───────────────────────── */
+        #corner-tag {
+            position: fixed;
+            top: 5vh;
+            left: 4vw;
+            z-index: 10;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 200;
+            color: rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            pointer-events: none;
+        }
+
+        /* ── dot grid ───────────────────────────────────── */
+        #dot-grid {
+            position: fixed;
+            bottom: 4vh;
+            right: 5vw;
+            z-index: 10;
+            display: grid;
+            grid-template-columns: repeat(5, 8px);
+            gap: 5px;
+            pointer-events: none;
+        }
+
+        .dot {
+            width: 2px;
+            height: 2px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- background tunnel -->
+    <div id="threejs-container"></div>
+
+    <!-- wave canvas -->
+    <canvas id="wave-canvas"></canvas>
+
+    <!-- clock -->
+    <div id="clock">
+        <div id="clock-time">00:00</div>
+        <div id="clock-date">—</div>
+    </div>
+
+    <!-- decorative corner tag -->
+    <div id="corner-tag">Soundscape</div>
+
+    <!-- right label -->
+    <div id="side-label">Now Playing</div>
+
+    <!-- dot grid decoration -->
+    <div id="dot-grid"></div>
+
+    <!-- side spectrum -->
+    <div id="spectrum-line"></div>
+
+    <!-- track card -->
+    <div id="card">
+        <div id="art-wrap">
+            <div id="art-ring-glow"></div>
+            <div id="art-ring"></div>
+            <img id="albumart" src="" alt="">
+        </div>
+
+        <div id="track-info">
+            <div id="track-title">Nothing Playing</div>
+            <div id="track-artist">—</div>
+            <div id="scrub">
+                <div id="scrub-track">
+                    <div id="scrub-fill"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="eq"></div>
+    </div>
+
+    <script>
+        (function () {
+            'use strict';
+
+            // ── refs ──────────────────────────────────────────────
+            var container = document.getElementById('threejs-container');
+            var waveCanvas = document.getElementById('wave-canvas');
+            var waveCtx = waveCanvas.getContext('2d');
+            var albumartEl = document.getElementById('albumart');
+            var titleEl = document.getElementById('track-title');
+            var artistEl = document.getElementById('track-artist');
+            var cardEl = document.getElementById('card');
+            var scrubFill = document.getElementById('scrub-fill');
+            var artRing = document.getElementById('art-ring');
+            var artRingGlow = document.getElementById('art-ring-glow');
+            var eqEl = document.getElementById('eq');
+            var specLineEl = document.getElementById('spectrum-line');
+            var dotGrid = document.getElementById('dot-grid');
+
+            // ── state ─────────────────────────────────────────────
+            var isPlaying = false;
+            var accentRGB = [196, 181, 253];   // purple default
+            var glowRGB = [109, 40, 217];
+
+            var settings = {
+                speed: 0.1, blur: 7, parallax: 1,
+                waveIntensity: 0.7,
+                showClock: true, is24h: true,
+                showWave: true, showTrack: true,
+            };
+
+            // ── audio ─────────────────────────────────────────────
+            var audioData = new Float32Array(128);
+            var smoothAudio = new Float32Array(128);
+
+            // ── dot grid ──────────────────────────────────────────
+            for (var d = 0; d < 25; d++) {
+                var dot = document.createElement('div');
+                dot.className = 'dot';
+                dotGrid.appendChild(dot);
+            }
+
+            // ── eq bars ───────────────────────────────────────────
+            var EQ_COUNT = 10;
+            var eqBars = [];
+            for (var i = 0; i < EQ_COUNT; i++) {
+                var bar = document.createElement('div');
+                bar.className = 'eq-bar';
+                bar.style.height = '3px';
+                eqEl.appendChild(bar);
+                eqBars.push(bar);
+            }
+
+            // ── spectrum side bars ────────────────────────────────
+            var SPEC_COUNT = 28;
+            var specBars = [];
+            for (var i = 0; i < SPEC_COUNT; i++) {
+                var sb = document.createElement('div');
+                sb.className = 'spec-bar';
+                sb.style.width = '4px';
+                specLineEl.appendChild(sb);
+                specBars.push(sb);
+            }
+
+            // ── WebGL shader ──────────────────────────────────────
+            var gl, prog, uniforms = {}, textures = [null, null];
+            var blendVal = 0, isSlot0 = false, currentSrc = null;
+            var timeStart;
+
+            var VERT = `
+        attribute vec2 a_pos;
+        varying vec2 v_uv;
+        void main() { v_uv = a_pos*.5+.5; gl_Position = vec4(a_pos,0.,1.); }
+    `;
+
+            var FRAG = `
+        precision mediump float;
+        const float PI = 3.1415927;
+        uniform float u_time, u_speed, u_blend, u_bass, u_center_r;
+        uniform bool  u_square, u_center;
+        uniform vec2  u_res;
+        uniform vec3  u_center_col;
+        uniform sampler2D u_tex0, u_tex1;
+        varying vec2 v_uv;
+        void main(){
+            vec2 p = (2.*gl_FragCoord.xy - u_res) / u_res.y;
+            float a = atan(p.y, p.x);
+            float r = u_square
+                ? pow(pow(p.x*p.x,4.)+pow(p.y*p.y,4.), .125)
+                : length(p);
+            r *= 1. - u_bass*.08;
+            vec2 uv = vec2(.3/r + .2*u_time*u_speed, .5+a/PI);
+            vec3 col = mix(texture2D(u_tex0,uv).rgb, texture2D(u_tex1,uv).rgb, u_blend);
+            if(u_center){
+                float f = 1. - smoothstep(0., u_center_r, r);
+                col = mix(col, u_center_col, f);
+            }
+            gl_FragColor = vec4(col, 1.);
+        }
+    `;
+
+            function mkShader(src, type) {
+                var s = gl.createShader(type);
+                gl.shaderSource(s, src);
+                gl.compileShader(s);
+                return gl.getShaderParameter(s, gl.COMPILE_STATUS) ? s : null;
+            }
+
+            function initGL() {
+                var c = document.createElement('canvas');
+                c.style.cssText = 'width:100%;height:100%;display:block;';
+                container.appendChild(c);
+                gl = c.getContext('webgl', { antialias: false });
+                if (!gl) return;
+
+                var vs = mkShader(VERT, gl.VERTEX_SHADER);
+                var fs = mkShader(FRAG, gl.FRAGMENT_SHADER);
+                prog = gl.createProgram();
+                gl.attachShader(prog, vs);
+                gl.attachShader(prog, fs);
+                gl.linkProgram(prog);
+                gl.useProgram(prog);
+
+                var buf = gl.createBuffer();
+                gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+                gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+                var aPos = gl.getAttribLocation(prog, 'a_pos');
+                gl.enableVertexAttribArray(aPos);
+                gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+                ['u_time', 'u_speed', 'u_blend', 'u_square', 'u_center', 'u_tex0', 'u_tex1',
+                    'u_res', 'u_center_col', 'u_center_r', 'u_bass'].forEach(function (n) {
+                        uniforms[n] = gl.getUniformLocation(prog, n);
+                    });
+
+                gl.uniform1f(uniforms.u_speed, settings.speed);
+                gl.uniform1i(uniforms.u_square, 1);
+                gl.uniform1i(uniforms.u_center, 0);
+                gl.uniform1f(uniforms.u_center_r, 1.0);
+                gl.uniform1f(uniforms.u_blend, 0);
+                gl.uniform1f(uniforms.u_bass, 0);
+
+                resizeGL();
+                window.addEventListener('resize', resizeGL);
+                loadTex('background.png', true);
+                timeStart = performance.now();
+                loop();
+            }
+
+            function resizeGL() {
+                var dpr = Math.min(window.devicePixelRatio || 1, 2);
+                gl.canvas.width = window.innerWidth * dpr;
+                gl.canvas.height = window.innerHeight * dpr;
+                gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+                gl.uniform2f(uniforms.u_res, gl.canvas.width, gl.canvas.height);
+            }
+
+            function loadTex(src, immediate) {
+                if (src === currentSrc) return;
+                currentSrc = src;
+                var img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function () {
+                    var tex = gl.createTexture();
+                    gl.bindTexture(gl.TEXTURE_2D, tex);
+                    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+                    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                    if (immediate) {
+                        textures[0] = textures[1] = tex; blendVal = 0;
+                    } else {
+                        var slot = isSlot0 ? 0 : 1;
+                        if (textures[slot]) gl.deleteTexture(textures[slot]);
+                        textures[slot] = tex;
+                        crossfade(isSlot0);
+                        isSlot0 = !isSlot0;
+                    }
+                };
+                img.src = src;
+            }
+
+            var cfAnim = null;
+            function crossfade(toSlot0) {
+                var start = performance.now(), from = toSlot0 ? 1 : 0, to = toSlot0 ? 0 : 1;
+                if (cfAnim) cancelAnimationFrame(cfAnim);
+                (function step() {
+                    var t = Math.min((performance.now() - start) / 700, 1);
+                    blendVal = from + (to - from) * t;
+                    if (t < 1) cfAnim = requestAnimationFrame(step);
+                })();
+            }
+
+            function loop() {
+                requestAnimationFrame(loop);
+                if (!gl || !prog) return;
+                var t = (performance.now() - timeStart) / 1000;
+
+                // only generate synthetic audio if no real data coming from backend
+                if (!window.__hasRealAudio) {
+                    var spd = isPlaying ? 1.0 : 0.25;
+                    var amp = isPlaying ? 0.85 : 0.12;
+                    for (var i = 0; i < 128; i++) {
+                        var fi = i / 128;
+                        var v = Math.sin(t * spd * 2.1 + fi * 6.0) * .35
+                            + Math.sin(t * spd * 3.8 + fi * 10 + 1.5) * .25
+                            + Math.sin(t * spd * 1.2 + fi * 3.5 + 3.0) * .2
+                            + Math.exp(-fi * 4) * Math.sin(t * spd * 4.5) * .35;
+                        audioData[i] = Math.max(0, (v + 1) * .5) * amp;
+                    }
+                }
+                for (var i = 0; i < 128; i++) {
+                    smoothAudio[i] += (audioData[i] - smoothAudio[i]) * 0.12;
+                }
+
+                var bass = 0;
+                for (var i = 0; i < 8; i++) bass += smoothAudio[i];
+                bass /= 8;
+
+                // render WebGL
+                gl.useProgram(prog);
+                gl.uniform1f(uniforms.u_time, t);
+                gl.uniform1f(uniforms.u_blend, blendVal);
+                gl.uniform1f(uniforms.u_bass, bass);
+                gl.activeTexture(gl.TEXTURE0);
+                if (textures[0]) gl.bindTexture(gl.TEXTURE_2D, textures[0]);
+                gl.uniform1i(uniforms.u_tex0, 0);
+                gl.activeTexture(gl.TEXTURE1);
+                if (textures[1]) gl.bindTexture(gl.TEXTURE_2D, textures[1]);
+                gl.uniform1i(uniforms.u_tex1, 1);
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+                drawWaves(t, bass);
+                updateDOM(t, bass);
+            }
+
+            // ── waves ─────────────────────────────────────────────
+            function resizeWave() {
+                var dpr = Math.min(window.devicePixelRatio || 1, 2);
+                waveCanvas.width = window.innerWidth * dpr;
+                waveCanvas.height = window.innerHeight * dpr;
+                waveCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+            resizeWave();
+            window.addEventListener('resize', resizeWave);
+
+            function drawWaves(time, bass) {
+                if (!settings.showWave) { waveCtx.clearRect(0, 0, waveCanvas.width, waveCanvas.height); return; }
+                var w = window.innerWidth, h = window.innerHeight;
+                waveCtx.clearRect(0, 0, w, h);
+
+                var layers = [
+                    { yOff: 0, ampMult: 1.0, alpha: 0.28, lw: 2.0, start: 0, end: 42 },
+                    { yOff: -35, ampMult: 0.65, alpha: 0.15, lw: 1.4, start: 43, end: 85 },
+                    { yOff: 35, ampMult: 0.4, alpha: 0.09, lw: 1.0, start: 86, end: 127 },
+                ];
+
+                var r = accentRGB[0], g = accentRGB[1], b = accentRGB[2];
+                var midY = h * 0.5;
+
+                layers.forEach(function (L) {
+                    var count = L.end - L.start + 1;
+                    var baseY = midY + L.yOff;
+                    var hScale = h * 0.14 * settings.waveIntensity * L.ampMult;
+
+                    // top stroke
+                    waveCtx.beginPath();
+                    for (var x = 0; x <= w; x += 2) {
+                        var idx = L.start + Math.floor((x / w) * count);
+                        var val = smoothAudio[Math.min(idx, 127)] * hScale;
+                        var wy = baseY - val + Math.sin(x * 0.007 + time * 1.1 + L.yOff) * 2.5;
+                        x === 0 ? waveCtx.moveTo(x, wy) : waveCtx.lineTo(x, wy);
+                    }
+                    waveCtx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + L.alpha + ')';
+                    waveCtx.lineWidth = L.lw;
+                    waveCtx.stroke();
+
+                    // mirror bottom stroke
+                    waveCtx.beginPath();
+                    for (var x = 0; x <= w; x += 2) {
+                        var idx = L.start + Math.floor((x / w) * count);
+                        var val = smoothAudio[Math.min(idx, 127)] * hScale;
+                        var wy = baseY + val - Math.sin(x * 0.007 + time * 1.1 + L.yOff) * 2.5;
+                        x === 0 ? waveCtx.moveTo(x, wy) : waveCtx.lineTo(x, wy);
+                    }
+                    waveCtx.strokeStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (L.alpha * 0.5) + ')';
+                    waveCtx.lineWidth = L.lw;
+                    waveCtx.stroke();
+
+                    // fill glow between waves
+                    waveCtx.beginPath();
+                    for (var x = 0; x <= w; x += 3) {
+                        var idx = L.start + Math.floor((x / w) * count);
+                        var val = smoothAudio[Math.min(idx, 127)] * hScale;
+                        var wy = baseY - val + Math.sin(x * 0.007 + time * 1.1 + L.yOff) * 2.5;
+                        x === 0 ? waveCtx.moveTo(x, wy) : waveCtx.lineTo(x, wy);
+                    }
+                    for (var x = w; x >= 0; x -= 3) {
+                        var idx = L.start + Math.floor((x / w) * count);
+                        var val = smoothAudio[Math.min(idx, 127)] * hScale;
+                        var wy = baseY + val - Math.sin(x * 0.007 + time * 1.1 + L.yOff) * 2.5;
+                        waveCtx.lineTo(x, wy);
+                    }
+                    waveCtx.closePath();
+                    waveCtx.fillStyle = 'rgba(' + r + ',' + g + ',' + b + ',' + (L.alpha * 0.05) + ')';
+                    waveCtx.fill();
+                });
+            }
+
+            // ── DOM updates ────────────────────────────────────────
+            var fakeProgress = 0;
+            function updateDOM(time, bass) {
+                // eq bars
+                for (var i = 0; i < EQ_COUNT; i++) {
+                    var idx = Math.floor((i / EQ_COUNT) * 80);
+                    var h = Math.round(3 + smoothAudio[idx] * 26);
+                    eqBars[i].style.height = h + 'px';
+                }
+
+                // spectrum side bars
+                for (var i = 0; i < SPEC_COUNT; i++) {
+                    var idx = Math.floor((i / SPEC_COUNT) * 90);
+                    var w = Math.round(4 + smoothAudio[idx] * 36);
+                    specBars[i].style.width = w + 'px';
+                }
+
+                // fake progress creep when playing
+                if (isPlaying) {
+                    fakeProgress = Math.min(fakeProgress + 0.0001, 1);
+                    scrubFill.style.width = (fakeProgress * 100) + '%';
+                }
+            }
+
+            // ── color extraction ───────────────────────────────────
+            function extractColors(imgEl) {
+                try {
+                    var c = document.createElement('canvas');
+                    var cx = c.getContext('2d');
+                    c.width = c.height = 32;
+                    cx.drawImage(imgEl, 0, 0, 32, 32);
+                    var px = cx.getImageData(0, 0, 32, 32).data;
+
+                    // center dominant
+                    var rS = 0, gS = 0, bS = 0, n = 0;
+                    for (var y = 8; y < 24; y++) for (var x = 8; x < 24; x++) {
+                        var i = (y * 32 + x) * 4; rS += px[i]; gS += px[i + 1]; bS += px[i + 2]; n++;
+                    }
+                    var dR = Math.round(rS / n), dG = Math.round(gS / n), dB = Math.round(bS / n);
+
+                    // edge contrast
+                    var eR = 0, eG = 0, eB = 0, en = 0;
+                    for (var x = 0; x < 32; x++) for (var row of [0, 31]) {
+                        var i = (row * 32 + x) * 4; eR += px[i]; eG += px[i + 1]; eB += px[i + 2]; en++;
+                    }
+                    eR = Math.round(eR / en); eG = Math.round(eG / en); eB = Math.round(eB / en);
+
+                    var dL = dR * .299 + dG * .587 + dB * .114;
+                    var eL = eR * .299 + eG * .587 + eB * .114;
+
+                    if (eL > dL) { accentRGB = [eR, eG, eB]; glowRGB = [dR, dG, dB]; }
+                    else { accentRGB = [dR, dG, dB]; glowRGB = [eR, eG, eB]; }
+
+                    // ensure visibility
+                    var lum = accentRGB[0] * .299 + accentRGB[1] * .587 + accentRGB[2] * .114;
+                    if (lum < 90) accentRGB = accentRGB.map(function (c) { return Math.min(255, c + 90); });
+
+                    applyAccent();
+                } catch (e) { }
+            }
+
+            function applyAccent() {
+                var ac = 'rgb(' + accentRGB + ')';
+                var gc = 'rgb(' + glowRGB + ')';
+                var acDim = 'rgba(' + accentRGB + ',0.35)';
+                var acDim2 = 'rgba(' + accentRGB + ',0.12)';
+                document.documentElement.style.setProperty('--accent', ac);
+                document.documentElement.style.setProperty('--accent-glow', acDim);
+                document.documentElement.style.setProperty('--accent-dim', acDim2);
+                document.documentElement.style.setProperty('--shadow-color', gc);
+                if (gl) {
+                    gl.useProgram(prog);
+                    gl.uniform3f(uniforms.u_center_col, glowRGB[0] / 255, glowRGB[1] / 255, glowRGB[2] / 255);
+                }
+                // update glow on card
+                cardEl.style.boxShadow = [
+                    'inset 0 1px 0 rgba(255,255,255,0.07)',
+                    '0 24px 64px rgba(0,0,0,0.65)',
+                    '0 0 0 1px rgba(0,0,0,0.4)',
+                    '0 0 48px rgba(' + accentRGB + ',0.35)'
+                ].join(',');
+            }
+
+            albumartEl.addEventListener('load', function () { extractColors(albumartEl); });
+
+            // ── parallax ──────────────────────────────────────────
+            document.addEventListener('mousemove', function (e) {
+                if (!settings.parallax) return;
+                var x = (window.innerWidth - e.pageX * settings.parallax) / 90;
+                var y = (window.innerHeight - e.pageY * settings.parallax) / 90;
+                container.style.transform = 'translateX(' + x + 'px) translateY(' + y + 'px) scale(1.12)';
+            });
+
+            // ── media callbacks ───────────────────────────────────
+            window.colorwallCurrentTrack = function (data) {
+                if (!data || data === 'null') {
+                    cardEl.classList.remove('visible');
+                    cardEl.style.opacity = '0';
+                    loadTex('background.png', false);
+                    if (gl) { gl.useProgram(prog); gl.uniform1i(uniforms.u_center, 0); }
+                    return;
+                }
+                try {
+                    if (typeof data === 'string') data = JSON.parse(data);
+                    titleEl.textContent = data.Title || 'Unknown Track';
+                    artistEl.textContent = data.Artist || 'Unknown Artist';
+                    fakeProgress = 0;
+
+                    if (data.Thumbnail) {
+                        var src = data.Thumbnail;
+                        if (!src.startsWith('data:image/')) src = 'data:image/png;base64,' + src;
+                        loadTex(src, false);
+                        albumartEl.src = src;
+                    } else {
+                        loadTex('background.png', false);
+                        albumartEl.src = 'background.png';
+                    }
+                    if (gl) { gl.useProgram(prog); gl.uniform1i(uniforms.u_center, 1); }
+                    cardEl.classList.add('visible');
+                } catch (e) { }
+            };
+
+            window.colorwallWallpaperPlaybackChanged = function (state) {
+                if (typeof state === 'string') { try { state = JSON.parse(state); } catch (e) { } }
+                isPlaying = state && state.IsPaused === false;
+                if (isPlaying) {
+                    artRing.classList.add('playing');
+                    artRingGlow.classList.add('playing');
+                } else {
+                    artRing.classList.remove('playing');
+                    artRingGlow.classList.remove('playing');
+                }
+            };
+
+            window.__hasRealAudio = false;
+            var __audioTimeout = null;
+            window.colorwallAudioListener = function (data) {
+                try {
+                    if (typeof data === 'string') data = JSON.parse(data);
+                    if (Array.isArray(data)) {
+                        for (var i = 0; i < 128 && i < data.length; i++) audioData[i] = data[i];
+                        // flag real audio is active — auto-expire after 500ms of silence
+                        window.__hasRealAudio = true;
+                        if (__audioTimeout) clearTimeout(__audioTimeout);
+                        __audioTimeout = setTimeout(function() { window.__hasRealAudio = false; }, 500);
+                    }
+                } catch (e) { }
+            };
+
+            window.colorwallSystemInformation = function () { };
+
+            window.colorwallPropertyListener = function (name, value) {
+                var n = parseFloat(value);
+                switch (name) {
+                    case 'speed': settings.speed = n; if (gl) { gl.useProgram(prog); gl.uniform1f(uniforms.u_speed, n); } break;
+                    case 'isSquare': if (gl) { gl.useProgram(prog); gl.uniform1i(uniforms.u_square, value ? 1 : 0); } break;
+                    case 'colorRadius': if (gl) { gl.useProgram(prog); gl.uniform1f(uniforms.u_center_r, n); } break;
+                    case 'blurIntensity': settings.blur = n; container.style.filter = 'blur(' + n + 'px) brightness(0.65) saturate(1.3)'; break;
+                    case 'parallaxIntensity': settings.parallax = n; break;
+                    case 'visualizerIntensity': settings.waveIntensity = n / 100; break;
+                    case 'showVisualizer': settings.showWave = !!value; waveCanvas.style.opacity = value ? '1' : '0'; break;
+                    case 'showClock': settings.showClock = !!value; document.getElementById('clock').style.opacity = value ? '1' : '0'; break;
+                    case 'clock24h': settings.is24h = !!value; break;
+                    case 'showTrackInfo': settings.showTrack = !!value; cardEl.style.display = value ? '' : 'none'; break;
+                }
+            };
+
+            // ── clock ─────────────────────────────────────────────
+            var DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            var MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+            function pad(n) { return n < 10 ? '0' + n : '' + n; }
+            function tickClock() {
+                if (!settings.showClock) return;
+                var now = new Date();
+                var h = now.getHours(), m = now.getMinutes();
+                if (!settings.is24h) h = h % 12 || 12;
+                document.getElementById('clock-time').textContent = pad(h) + ':' + pad(m);
+                document.getElementById('clock-date').textContent =
+                    DAYS[now.getDay()] + ' · ' + now.getDate() + ' ' + MONTHS[now.getMonth()];
+            }
+            tickClock();
+            setInterval(tickClock, 1000);
+
+            // ── init ──────────────────────────────────────────────
+            initGL();
+
+        })();
+    </script>
+</body>
+
+</html>

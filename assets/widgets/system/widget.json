@@ -1,0 +1,12 @@
+{
+    "name": "System Resources",
+    "description": "Minimalist CPU and RAM usage monitor.",
+    "version": "1.0",
+    "author": "Colorwall",
+    "defaultPosition": { "x": "100px", "y": "300px" },
+    "tweaks": {
+        "color": { "type": "color", "text": "Accent Color", "value": "#8b5cf6" },
+        "scale": { "type": "slider", "text": "Scale", "value": 100, "min": 50, "max": 200, "step": 10 },
+        "glass": { "type": "checkbox", "text": "Glass Background", "value": true }
+    }
+}

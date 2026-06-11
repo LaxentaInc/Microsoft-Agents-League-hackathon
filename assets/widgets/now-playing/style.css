@@ -1,0 +1,114 @@
+.cw-np-card {
+    --_hidden-scale: 1;
+    --_hidden-y: 0px;
+    --_hidden-opacity: 1;
+    --_hidden-blur: 0px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px 22px 14px 14px;
+    background: linear-gradient(135deg, rgba(12, 10, 24, 0.78), rgba(8, 6, 18, 0.68));
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 24px;
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.08),
+        0 20px 56px rgba(0, 0, 0, 0.55),
+        0 0 36px rgba(196, 181, 253, 0.12);
+    width: clamp(320px, 38vw, 420px);
+    max-width: 96vw;
+    opacity: calc(var(--_hidden-opacity) * calc(var(--tw-opacity, 95) / 100));
+    transform:
+        scale(calc(var(--tw-scale, 100) / 100))
+        scale(var(--_hidden-scale))
+        translateY(var(--_hidden-y));
+    filter: blur(var(--_hidden-blur));
+    transform-origin: center bottom;
+    transition: opacity 0.45s ease, transform 0.35s ease, filter 0.3s ease, box-shadow 0.3s ease;
+}
+
+.cw-np-card.cw-np-hidden {
+    --_hidden-scale: 0.96;
+    --_hidden-y: 4px;
+    --_hidden-opacity: 0.0;
+    --_hidden-blur: 4px;
+}
+
+.cw-np-art-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cw-np-art {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: rgba(255, 255, 255, 0.04);
+    box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+}
+
+.cw-np-visualizer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    z-index: 1;
+    /* drop shadow for the glowing EQ bars */
+    filter: drop-shadow(0 0 4px rgba(196, 181, 253, 0.5));
+}
+
+.cw-np-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    justify-content: center;
+}
+
+.cw-np-marquee-wrapper {
+    width: 100%;
+    overflow: hidden;
+    white-space: nowrap;
+    position: relative;
+    /* Fades the text slightly before it hits the padding boundary */
+    mask-image: linear-gradient(to right, black 95%, transparent);
+    -webkit-mask-image: linear-gradient(to right, black 95%, transparent);
+}
+
+.cw-np-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.95);
+    display: inline-block;
+}
+
+.cw-np-artist {
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.6);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: inline-block;
+}
+
+/* Dynamically added by JS for long text */
+.cw-marquee {
+    animation: bounceScroll 7s ease-in-out infinite alternate;
+}
+
+@keyframes bounceScroll {
+    0%, 15% { transform: translateX(0); }
+    85%, 100% { transform: translateX(var(--scroll-dist)); }
+}

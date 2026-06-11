@@ -1,0 +1,26 @@
+{
+    "id": "visualizer",
+    "name": "Audio Visualizer",
+    "author": "Colorwall",
+    "version": "1.0.0",
+    "description": "highly customizable radial audio visualizer",
+    "entry": "template.html",
+    "style": "style.css",
+    "script": "script.js",
+    "defaultPosition": { "x": "50%", "y": "50%" },
+    "draggable": true,
+    "dataBindings": ["audio"],
+    "tweaks": {
+        "color": { "type": "color", "text": "Color", "value": "#ffffff" },
+        "radius": { "type": "slider", "text": "Radius", "value": 150, "min": 20, "max": 500, "step": 5 },
+        "thickness": { "type": "slider", "text": "Thickness", "value": 8, "min": 2, "max": 30, "step": 1 },
+        "lengthMultiplier": { "type": "slider", "text": "Intensity", "value": 80, "min": 10, "max": 300, "step": 5 },
+        "perspective": { "type": "slider", "text": "3D Perspective", "value": 1000, "min": 200, "max": 2500, "step": 50 },
+        "rotateX": { "type": "slider", "text": "Tilt Up/Down (X)", "value": 0, "min": -85, "max": 85, "step": 1 },
+        "rotateY": { "type": "slider", "text": "Tilt Left/Right (Y)", "value": 0, "min": -85, "max": 85, "step": 1 },
+        "rotateZ": { "type": "slider", "text": "Spin (Z)", "value": 0, "min": 0, "max": 360, "step": 1 },
+        "barCount": { "type": "slider", "text": "Bar Count", "value": 64, "min": 16, "max": 128, "step": 4 },
+        "roundedEnds": { "type": "checkbox", "text": "Rounded Bars", "value": false },
+        "opacity": { "type": "slider", "text": "Opacity", "value": 100, "min": 10, "max": 100, "step": 1 }
+    }
+}

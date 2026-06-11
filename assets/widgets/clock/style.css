@@ -1,0 +1,31 @@
+.cw-clock-widget {
+    font-family: 'Inter', -apple-system, sans-serif;
+    color: var(--tw-textColor, #ffffff);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    line-height: 1;
+    transform: scale(calc(var(--tw-fontSize, 100) / 100));
+    transform-origin: top left;
+    
+    padding: calc(var(--tw-showCard, 0) * 2rem);
+    background: rgba(0,0,0,calc(var(--tw-showCard, 0) * 0.2));
+    backdrop-filter: blur(calc(var(--tw-showCard, 0) * 10px));
+    border-radius: 1rem;
+    border: calc(var(--tw-showCard, 0) * 1px) solid rgba(255,255,255,calc(var(--tw-showCard, 0) * 0.1));
+    
+    text-shadow: 0 0 calc(var(--tw-glow, 0) * 20px) var(--tw-textColor, #ffffff);
+}
+.cw-clock-time {
+    font-size: 8rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 0.5rem;
+}
+.cw-clock-date {
+    font-size: 1.5rem;
+    font-weight: 500;
+    opacity: 0.7;
+    letter-spacing: -0.01em;
+    text-transform: uppercase;
+}

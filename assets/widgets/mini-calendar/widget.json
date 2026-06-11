@@ -1,0 +1,23 @@
+{
+    "id": "mini-calendar",
+    "name": "Mini Calendar",
+    "description": "A glassmorphism mini calendar showing the current month.",
+    "version": "1.0",
+    "author": "Colorwall",
+    "entry": "template.html",
+    "style": "style.css",
+    "script": "script.js",
+    "defaultPosition": { "x": "80%", "y": "10%" },
+    "fonts": [
+        {
+            "family": "Outfit",
+            "source": "google",
+            "weights": [400, 500, 600, 700]
+        }
+    ],
+    "tweaks": {
+        "accent": { "type": "color", "text": "Accent Color", "value": "#60a5fa" },
+        "scale": { "type": "slider", "text": "Scale", "value": 100, "min": 50, "max": 200, "step": 10 },
+        "glass": { "type": "checkbox", "text": "Glass Background", "value": true }
+    }
+}

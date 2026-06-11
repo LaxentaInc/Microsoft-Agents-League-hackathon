@@ -1,0 +1,23 @@
+{
+    "id": "greeting",
+    "name": "Time Greeting",
+    "description": "Says Good Morning, Afternoon, or Evening based on time.",
+    "version": "1.0",
+    "author": "Colorwall",
+    "entry": "template.html",
+    "style": "style.css",
+    "script": "script.js",
+    "defaultPosition": { "x": "50%", "y": "25%" },
+    "fonts": [
+        {
+            "family": "Space Grotesk",
+            "source": "google",
+            "weights": [300, 400, 600, 700]
+        }
+    ],
+    "tweaks": {
+        "name": { "type": "text", "text": "Your Name", "value": "User" },
+        "color": { "type": "color", "text": "Text Color", "value": "#ffffff" },
+        "scale": { "type": "slider", "text": "Scale", "value": 100, "min": 50, "max": 200, "step": 10 }
+    }
+}

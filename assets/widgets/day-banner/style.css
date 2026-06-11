@@ -1,0 +1,39 @@
+.cw-day-wrap {
+    padding: 8px 0;
+    text-align: center;
+}
+
+.cw-day-name {
+    font-family: var(--tw-fontFamily, 'Orbitron'), sans-serif;
+    font-size: var(--tw-fontSize-px, 48px);
+    font-weight: 300;
+    color: var(--tw-textColor, #00e5ff);
+    opacity: calc(var(--tw-opacity, 85) / 100);
+    letter-spacing: calc(var(--tw-letterSpacing, 16) * 1px);
+    text-transform: uppercase;
+    line-height: 1.1;
+    text-shadow:
+        0 0 30px currentColor,
+        0 0 60px rgba(0, 229, 255, 0.15);
+}
+
+.cw-day-date {
+    font-family: var(--tw-fontFamily, 'Orbitron'), sans-serif;
+    font-size: clamp(10px, calc(var(--tw-fontSize, 48) * 0.28 * 1px), 18px);
+    font-weight: 400;
+    color: var(--tw-textColor, #00e5ff);
+    opacity: calc(var(--tw-opacity, 85) / 100 * 0.55);
+    letter-spacing: calc(var(--tw-letterSpacing, 16) * 0.5 * 1px);
+    text-transform: uppercase;
+    margin-top: 6px;
+}
+
+.cw-day-time {
+    font-family: var(--tw-fontFamily, 'Orbitron'), sans-serif;
+    font-size: clamp(9px, calc(var(--tw-fontSize, 48) * 0.22 * 1px), 14px);
+    font-weight: 300;
+    color: var(--tw-textColor, #00e5ff);
+    opacity: calc(var(--tw-opacity, 85) / 100 * 0.35);
+    letter-spacing: calc(var(--tw-letterSpacing, 16) * 0.3 * 1px);
+    margin-top: 2px;
+}

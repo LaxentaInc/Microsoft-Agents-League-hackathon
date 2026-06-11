@@ -1,0 +1,24 @@
+pub mod konachan;
+pub mod moewalls;
+pub mod motionbgs;
+pub mod desktophut;
+pub mod utils;
+pub mod wallhaven;
+pub mod wallpaperflare;
+pub mod wallpapers_com;
+pub mod wallpapersclan;
+pub mod wallpaperwaifu;
+pub mod wallpaper_archive;
+pub mod wallpaper_archive_laxentainc;
+
+pub use konachan::*;
+pub use moewalls::*;
+pub use motionbgs::*;
+pub use desktophut::*;
+pub use wallhaven::*;
+pub use wallpaperflare::*;
+pub use wallpapers_com::*;
+pub use wallpapersclan::*;
+pub use wallpaperwaifu::*;
+pub use wallpaper_archive::*;
+pub use wallpaper_archive_laxentainc::*;

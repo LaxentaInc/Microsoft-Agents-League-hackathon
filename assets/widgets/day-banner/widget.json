@@ -1,0 +1,69 @@
+{
+    "id": "day-banner",
+    "name": "Day Banner",
+    "author": "Colorwall",
+    "version": "1.0.0",
+    "description": "big day-of-week name with date underneath, wide-spaced futuristic style",
+    "entry": "template.html",
+    "style": "style.css",
+    "defaultPosition": { "x": "50%", "y": "5%" },
+    "draggable": true,
+    "dataBindings": ["date"],
+    "fonts": [
+        { "family": "Orbitron", "source": "google", "weights": [300, 400, 700] },
+        { "family": "Rajdhani", "source": "google", "weights": [300, 500] },
+        { "family": "Share Tech Mono", "source": "google", "weights": [400] }
+    ],
+    "tweaks": {
+        "fontFamily": {
+            "type": "dropdown",
+            "text": "Font",
+            "value": "Orbitron",
+            "items": [
+                { "label": "Orbitron", "value": "Orbitron" },
+                { "label": "Rajdhani", "value": "Rajdhani" },
+                { "label": "Share Tech Mono", "value": "Share Tech Mono" },
+                { "label": "Segoe UI", "value": "Segoe UI" }
+            ]
+        },
+        "fontSize": {
+            "type": "slider",
+            "text": "Size",
+            "value": 48,
+            "min": 16,
+            "max": 120,
+            "step": 2
+        },
+        "textColor": {
+            "type": "color",
+            "text": "Color",
+            "value": "#00e5ff"
+        },
+        "opacity": {
+            "type": "slider",
+            "text": "Opacity",
+            "value": 85,
+            "min": 5,
+            "max": 100,
+            "step": 1
+        },
+        "letterSpacing": {
+            "type": "slider",
+            "text": "Letter Spacing",
+            "value": 16,
+            "min": 0,
+            "max": 40,
+            "step": 1
+        },
+        "showDate": {
+            "type": "checkbox",
+            "text": "Show Date Below",
+            "value": true
+        },
+        "showTime": {
+            "type": "checkbox",
+            "text": "Show Time Below",
+            "value": true
+        }
+    }
+}

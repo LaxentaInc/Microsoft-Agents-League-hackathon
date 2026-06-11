@@ -1,0 +1,25 @@
+.cw-visualizer-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1000px;
+    height: 1000px;
+    pointer-events: none; /* so clicks pass through if placed over other things */
+    opacity: calc(var(--tw-opacity, 100) / 100);
+    transition: opacity 0.2s ease;
+}
+
+.cw-vis-3d-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transform: perspective(var(--tw-perspective-px, 1000px)) 
+               rotateX(calc(var(--tw-rotateX, 0) * 1deg)) 
+               rotateY(calc(var(--tw-rotateY, 0) * 1deg)) 
+               rotateZ(calc(var(--tw-rotateZ, 0) * 1deg));
+    transform-style: preserve-3d;
+}
+
+#vis-canvas {
+    /* The JS dynamically sets the shadow filter */
+}

@@ -1,0 +1,95 @@
+[package]
+name = "wallpaperengine"
+version = "1.0.0"
+description = "WallpaperEngine"
+authors = ["LaxentaInc"]
+edition = "2021"
+default-run = "wallpaperengine"
+
+# Main Tauri application
+[[bin]]
+name = "wallpaperengine"
+path = "src/main.rs"
+
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset", "tray-icon"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2.7.0"
+tauri-plugin-single-instance = "2.3.6"
+tauri-plugin-desktop-underlay = "0.2.0"
+tauri-plugin-fs = "2"
+dirs = "5"
+sentry = { version = "0.46", features = ["debug-images", "panic", "anyhow"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", features = ["json", "stream", "blocking", "gzip", "brotli", "deflate", "zstd"] }
+scraper = "0.22"
+url = "2"
+rand = "0.8"
+regex = "1"
+urlencoding = "2"
+wallpaper = "3.2"
+lazy_static = "1.4"
+which = "6"
+rust-embed = "8.9"
+thread = "0.0.1"
+md5 = "0.7"
+os-version = "0.2.1"
+futures = "0.3.31"
+futures-util = "0.3.31"
+chrono = { version = "0.4", features = ["serde"] }
+window-vibrancy = "0.7"
+sysinfo = "0.32"
+wmi = "0.15"
+base64 = "0.22.1"
+rustfft = "6"
+discord-rich-presence = "1.1.0"
+image = { version = "0.25", default-features = false, features = ["gif", "jpeg", "png", "webp"] }
+zip = "8.5.1"
+obfstr = "0.4.4"
+libloading = "0.8"
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.61.1", features = [
+    "Win32_Foundation",
+    "Win32_UI_WindowsAndMessaging",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_Controls",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Com",
+    "Win32_System_Threading",
+    "Win32_System_SystemInformation",
+    "Win32_System_LibraryLoader",
+    "Win32_System_Pipes",
+    "Win32_System_IO",
+    "Win32_Security",
+    "Win32_Media_Audio",
+    "Win32_Media_Audio_Endpoints",
+    "Win32_Graphics_Dwm",
+    "Win32_UI_HiDpi",
+    "Win32_System_WinRT",
+    "Win32_System_Diagnostics_Debug",
+    "Media_Control",
+    "Foundation",
+    "Storage_Streams",
+] }
+winreg = "0.52"
+windows-core = "0.61.1"
+winrt-notification = "0.5"
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 2
+panic = "unwind"
+strip = false
+debug = 0

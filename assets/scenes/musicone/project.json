@@ -1,0 +1,107 @@
+{
+    "title": "MusicOne",
+    "file": "index.html",
+    "author": "Colorwall",
+    "description": "audio-reactive music visualizer with floating song previews, dynamic color extraction from album art, particle effects, and smooth parallax. reacts to whatever is currently playing on your system.",
+    "preview": "background.png",
+    "type": "Scene",
+    "contentrating": "Everyone",
+    "tags": ["Music", "Scene", "Visualizer", "Interactive"],
+    "general": {
+        "properties": {
+            "schemecolor": {
+                "order": 0,
+                "text": "Accent Color",
+                "type": "color",
+                "value": "#c4b5fd"
+            },
+            "visualizerIntensity": {
+                "order": 1,
+                "text": "Visualizer Intensity",
+                "type": "slider",
+                "value": 70,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "visualizerRadius": {
+                "order": 2,
+                "text": "Visualizer Radius",
+                "type": "slider",
+                "value": 38,
+                "min": 10,
+                "max": 60,
+                "step": 1
+            },
+            "barCount": {
+                "order": 3,
+                "text": "Bar Count",
+                "type": "slider",
+                "value": 80,
+                "min": 32,
+                "max": 128,
+                "step": 4
+            },
+            "mirrorBars": {
+                "order": 4,
+                "text": "Mirror Bars Inward",
+                "type": "checkbox",
+                "value": true
+            },
+            "rotateSpeed": {
+                "order": 5,
+                "text": "Rotation Speed",
+                "type": "slider",
+                "value": 8,
+                "min": 0,
+                "max": 50,
+                "step": 1
+            },
+            "showTrackInfo": {
+                "order": 6,
+                "text": "Show Track Info",
+                "type": "checkbox",
+                "value": true
+            },
+            "showClock": {
+                "order": 7,
+                "text": "Show Clock",
+                "type": "checkbox",
+                "value": true
+            },
+            "clock24h": {
+                "order": 8,
+                "text": "24 Hour Format",
+                "type": "checkbox",
+                "value": true
+            },
+            "particleDensity": {
+                "order": 9,
+                "text": "Particle Density",
+                "type": "slider",
+                "value": 40,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "parallaxIntensity": {
+                "order": 10,
+                "text": "Mouse Parallax",
+                "type": "slider",
+                "value": 30,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "backgroundBlur": {
+                "order": 11,
+                "text": "Background Blur",
+                "type": "slider",
+                "value": 0,
+                "min": 0,
+                "max": 20,
+                "step": 1
+            }
+        }
+    }
+}

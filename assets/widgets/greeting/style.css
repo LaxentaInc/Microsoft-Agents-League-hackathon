@@ -1,0 +1,30 @@
+.greeting-container {
+    font-family: 'Space Grotesk', sans-serif;
+    text-align: center;
+    color: var(--tw-color);
+    transform: scale(calc(var(--tw-scale) / 100));
+    transform-origin: center;
+    transition: all 0.3s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    text-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.greeting-text {
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 4px;
+}
+
+#greet-name {
+    font-weight: 300;
+}
+
+.sub-text {
+    font-size: 18px;
+    font-weight: 400;
+    opacity: 0.8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}

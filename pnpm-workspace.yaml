@@ -1,0 +1,6 @@
+packages:
+  - .
+
+onlyBuiltDependencies:
+  - esbuild
+  - tauri-plugin-desktop-underlay-api

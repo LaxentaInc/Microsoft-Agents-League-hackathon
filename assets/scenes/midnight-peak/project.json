@@ -1,0 +1,144 @@
+{
+    "title": "Midnight Peak",
+    "file": "index.html",
+    "author": "Colorwall",
+    "description": "a serene mountain peak under the night sky with twinkling stars, aurora borealis, volumetric clouds, and moonlight rays. fully customizable with draggable widgets.",
+    "preview": "preview.jpg",
+    "type": "Scene",
+    "contentrating": "Everyone",
+    "tags": ["Relaxing", "Scene", "Nature", "Night"],
+    "general": {
+        "properties": {
+            "schemecolor": {
+                "order": 0,
+                "text": "Color Scheme",
+                "type": "color",
+                "value": "#152a3f"
+            },
+            "starBrightness": {
+                "order": 1,
+                "text": "Star Brightness",
+                "type": "slider",
+                "value": 70,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "auroraIntensity": {
+                "order": 2,
+                "text": "Aurora Intensity",
+                "type": "slider",
+                "value": 30,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "cloudSpeed": {
+                "order": 3,
+                "text": "Cloud Speed",
+                "type": "slider",
+                "value": 50,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "rayIntensity": {
+                "order": 4,
+                "text": "Moonlight Intensity",
+                "type": "slider",
+                "value": 40,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "parallaxStrength": {
+                "order": 5,
+                "text": "Mouse Parallax",
+                "type": "slider",
+                "value": 30,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "widgetOpacity": {
+                "order": 6,
+                "text": "Widget Background Opacity",
+                "type": "slider",
+                "value": 35,
+                "min": 0,
+                "max": 100,
+                "step": 1
+            },
+            "clockEnabled": {
+                "order": 7,
+                "text": "Show Clock",
+                "type": "checkbox",
+                "value": true
+            },
+            "clockSize": {
+                "order": 8,
+                "text": "Clock Size",
+                "type": "slider",
+                "value": 65,
+                "min": 20,
+                "max": 100,
+                "step": 1
+            },
+            "clock24h": {
+                "order": 9,
+                "text": "24 Hour Format",
+                "type": "checkbox",
+                "value": true
+            },
+            "clockLang": {
+                "order": 10,
+                "text": "Clock Language",
+                "type": "dropdown",
+                "value": "en",
+                "items": [
+                    { "label": "English", "value": "en" },
+                    { "label": "Russian", "value": "ru" },
+                    { "label": "Japanese", "value": "jp" },
+                    { "label": "French", "value": "fr" },
+                    { "label": "Spanish", "value": "es" }
+                ]
+            },
+            "showDate": {
+                "order": 11,
+                "text": "Show Date",
+                "type": "checkbox",
+                "value": true
+            },
+            "showGreeting": {
+                "order": 12,
+                "text": "Show Greeting",
+                "type": "checkbox",
+                "value": true
+            },
+            "customText": {
+                "order": 13,
+                "text": "Custom Message",
+                "type": "textbox",
+                "value": ""
+            },
+            "showCalendar": {
+                "order": 14,
+                "text": "Show Calendar",
+                "type": "checkbox",
+                "value": true
+            },
+            "showMediaWidget": {
+                "order": 15,
+                "text": "Show Media Player",
+                "type": "checkbox",
+                "value": true
+            },
+            "showSystemWidget": {
+                "order": 16,
+                "text": "Show System Info",
+                "type": "checkbox",
+                "value": true
+            }
+        }
+    }
+}

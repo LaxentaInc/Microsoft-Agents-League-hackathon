@@ -1,0 +1,12 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "widgets",
+  "description": "Capability for the widget host and interactive player windows",
+  "windows": [
+    "wh_*",
+    "iw_*"
+  ],
+  "permissions": [
+    "core:default"
+  ]
+}

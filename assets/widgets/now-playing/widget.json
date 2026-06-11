@@ -1,0 +1,44 @@
+{
+    "id": "now-playing",
+    "name": "Now Playing",
+    "author": "Colorwall",
+    "version": "1.0.0",
+    "description": "shows currently playing track with album art and eq bars",
+    "entry": "template.html",
+    "style": "style.css",
+    "script": "script.js",
+    "defaultPosition": { "x": "50%", "y": "50%" },
+    "draggable": true,
+    "dataBindings": ["media", "playback", "audio"],
+    "fonts": [
+        { "family": "Inter", "source": "google", "weights": [300, 400, 600] }
+    ],
+    "tweaks": {
+        "accentColor": {
+            "type": "color",
+            "text": "Accent Color",
+            "value": "#c4b5fd"
+        },
+        "opacity": {
+            "type": "slider",
+            "text": "Opacity",
+            "value": 90,
+            "min": 10,
+            "max": 100,
+            "step": 1
+        },
+        "scale": {
+            "type": "slider",
+            "text": "Scale",
+            "value": 100,
+            "min": 50,
+            "max": 150,
+            "step": 5
+        },
+        "showEq": {
+            "type": "checkbox",
+            "text": "Show EQ Bars",
+            "value": true
+        }
+    }
+}
