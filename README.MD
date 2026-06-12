@@ -52,6 +52,8 @@ Here's what it actually looks like when the engine enumerates the shell hierarch
 <div align="center">
   <img src="src/assets/architecture_diagram.svg" alt="ColorWall Architecture Diagram" width="900" />
 </div>
+```
+
 
 ```mermaid
 graph TD
@@ -96,24 +98,24 @@ graph TD
 
 ## Other Features
 
-**Taskbar styling** — Acrylic, blur, and transparent taskbar effects. Works on both Win10 and Win11. The Start Menu is not hooked because Microsoft doesn't expose those APIs.
+**Taskbar styling**  Acrylic, blur, and transparent taskbar effects. Works on both Win10 and Win11. The Start Menu is not hooked because Microsoft doesn't expose those APIs.
 
-**Local library & offline support** — Works fully offline. All wallpaper types (static, video, interactive, widget) can be downloaded from the built-in store and run locally.
+**Local library & offline support**  Works fully offline. All wallpaper types (static, video, interactive, widget) can be downloaded from the built-in store and run locally.
 
-**Dual video renderer** — WMF (Windows Media Foundation) for native decoding, and MPV with extreme performance presets going up to spline36/EWA Lanczos for lossless playback.
+**Dual video renderer** WMF (Windows Media Foundation) for native decoding, and MPV with extreme performance presets going up to spline36/EWA Lanczos for lossless playback.
 
-**Real-time audio API** — 128 frequency bands via WASAPI loopback + 2048-point FFT with Hann windowing, exposed to wallpaper JS. Includes bass-energy-driven smoothing so visualizers look alive even during quiet passages.
+**Real-time audio API** 128 frequency bands via WASAPI loopback + 2048-point FFT with Hann windowing, exposed to wallpaper JS. Includes bass-energy-driven smoothing so visualizers look alive even during quiet passages.
 
-**Mouse forwarding** — Polls `GetCursorPos` and `GetAsyncKeyState`, converts screen coords to viewport-local using each window's position and scale factor, then dispatches synthetic `MouseEvent` + `PointerEvent` to all active webviews including canvases.
+**Mouse forwarding** Polls `GetCursorPos` and `GetAsyncKeyState`, converts screen coords to viewport-local using each window's position and scale factor, then dispatches synthetic `MouseEvent` + `PointerEvent` to all active webviews including canvases.
 
-**Media integration** — Uses Windows `GlobalSystemMediaTransportControlsSessionManager` to read the currently playing track (title, artist, album art) and forward it to wallpapers/widgets via `colorwallCurrentTrack()`.
+**Media integration** Uses Windows `GlobalSystemMediaTransportControlsSessionManager` to read the currently playing track (title, artist, album art) and forward it to wallpapers/widgets via `colorwallCurrentTrack()`.
 
-**System telemetry** — CPU usage, available RAM, and network throughput polled via `sysinfo` and forwarded to webviews via `colorwallSystemInformation()` every 3 seconds.
+**System telemetry** CPU usage, available RAM, and network throughput polled via `sysinfo` and forwarded to webviews via `colorwallSystemInformation()` every 3 seconds.
 
-**Content aggregator** — Built-in store with a large catalog of 4K wallpapers. FoundryIQ also pulls a random 4K video from the aggregator as the base background for generated interactives.
+**Content aggregator** Built-in store with a large catalog of 4K wallpapers. FoundryIQ also pulls a random 4K video from the aggregator as the base background for generated interactives.
 
-**Discord RPC** — Shows your current wallpaper to friends. Carried over from a previous project, took basically no time to add.
+**Discord RPC** Shows your current wallpaper to friends. Carried over from a previous project, took basically no time to add.
 
-**Watchdog** — Background thread that monitors webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
+**Watchdog** Background thread that monitors webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
 
 GitHub Copilot and FoundryIQ were used throughout development for debugging Win32 handle issues, reading crash dumps, working through front end and fixing invokes, fixing little issues, little borrow checks, race conditions that human eyes can not catch etc.
