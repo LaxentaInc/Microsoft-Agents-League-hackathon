@@ -1,7 +1,7 @@
 <div align="center">
   <img src="src/assets/LxColorWall.png" alt="ColorWall Logo" width="600" />
   <p>A native desktop customization engine for Windows 10/11, built in Rust/Tauri.</p>
-  <p><i>Submitted to the Microsoft AI Dev Days Global Hackathon 2026 — Best Use of Microsoft Foundry & Build AI Applications & Agents</i></p>
+  <p><i>Submitted to Agents League @ AISF 2026 — Creative Apps track, integrated with Foundry IQ</i></p>
 </div>
 
 ---
@@ -50,22 +50,45 @@ Here's what it actually looks like when the engine enumerates the shell hierarch
 [diag] virtual screen: origin=(0,0) size=1920x1080
 ```
 
-### Architecture
-
 ```mermaid
 graph TD
-    A[User Prompt] -->|Natural Language| B(FoundryIQ Agent)
-    B -->|Grounding| C{Generate HTML/JS}
-    C -->|Fallback to Knowledge Base| D[Save Widget/Interactive]
-    D --> E[Aggregator: Fetch Random 4K MP4 Background]
-    E --> F[Inject Background into HTML]
+    subgraph AI Generation
+        A[User Prompt] -->|Natural Language| B(FoundryIQ Agent)
+        B -->|Grounding via CW-API Knowledge Base| C[Generate HTML/CSS/JS]
+        C --> D[Save to Local Collection]
+        D --> E[Aggregator: Fetch 4K MP4 Background]
+        E --> F[Inject Video into HTML]
+    end
 
-    G[Rust Backend] -->|Trigger Message 0x052C| H[Shell Enumeration]
-    H -->|Find/Create WorkerW| I[Attach Tauri Webview2]
-    F --> I
+    subgraph Shell Injection
+        G[Rust Backend] -->|SendMessage 0x052C to Progman| H[Shell Enumeration]
+        H -->|Enumerate WorkerW handles| I{SHELLDLL_DefView?}
+        I -->|Found| J[Target WorkerW after DefView parent]
+        J --> K[SetParent Webview2 into WorkerW]
+    end
 
-    J[WASAPI Loopback] -->|128 bands, 2048-pt FFT| I
-    I -->|Render underneath Icons| K((Live Desktop))
+    subgraph Data Forwarders
+        L[WASAPI Loopback] -->|128 bands, 2048-pt FFT, Hann window| M[colorwallAudioListener]
+        N[Win32 GetCursorPos] -->|Screen to viewport coords| O[Synthetic Mouse/Pointer Events]
+        P[GlobalSystemMediaTransport] -->|Title, Artist, Thumbnail| Q[colorwallCurrentTrack]
+        R[sysinfo crate] -->|CPU, RAM, Network| S[colorwallSystemInformation]
+    end
+
+    subgraph Rendering
+        F --> K
+        K --> T[Interactive Wallpaper Webview]
+        K --> U[Widget Host Webview]
+        M --> T
+        M --> U
+        O --> T
+        O --> U
+        Q --> T
+        Q --> U
+        S --> T
+        S --> U
+        T -->|Rendered behind desktop icons| V((Live Desktop))
+        U -->|Click-through overlay| V
+    end
 ```
 
 ## Other Features
@@ -76,11 +99,19 @@ graph TD
 
 **Dual video renderer** — WMF (Windows Media Foundation) for native decoding, and MPV with extreme performance presets going up to spline36/EWA Lanczos for lossless playback.
 
-**Real-time audio API** — 128 frequency bands via WASAPI loopback + 2048-point FFT, exposed to wallpaper JS. Includes particle system controls and zero-JS data binding via `data-cw-*` attributes.
+**Real-time audio API** — 128 frequency bands via WASAPI loopback + 2048-point FFT with Hann windowing, exposed to wallpaper JS. Includes bass-energy-driven smoothing so visualizers look alive even during quiet passages.
+
+**Mouse forwarding** — Polls `GetCursorPos` and `GetAsyncKeyState`, converts screen coords to viewport-local using each window's position and scale factor, then dispatches synthetic `MouseEvent` + `PointerEvent` to all active webviews including canvases.
+
+**Media integration** — Uses Windows `GlobalSystemMediaTransportControlsSessionManager` to read the currently playing track (title, artist, album art) and forward it to wallpapers/widgets via `colorwallCurrentTrack()`.
+
+**System telemetry** — CPU usage, available RAM, and network throughput polled via `sysinfo` and forwarded to webviews via `colorwallSystemInformation()` every 3 seconds.
 
 **Content aggregator** — Built-in store with a large catalog of 4K wallpapers. FoundryIQ also pulls a random 4K video from the aggregator as the base background for generated interactives.
 
 **Discord RPC** — Shows your current wallpaper to friends. Carried over from a previous project, took basically no time to add.
+
+**Watchdog** — Background thread that monitors webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
 
 ## Built with AI
 
