@@ -145,6 +145,4 @@ The API also includes zero-JS data binding via `data-cw-*` attributes — `data-
 
 ---
 
-## Built with AI
-
 Usage of **Copilot** and **Foundry IQ** (in interactives and widgets tab), happened throughout development, for specific researches and fixes, finding log dumps, crashes etc and discussing issues! debugging Win32 handle issues, reading crash dumps, working through front end and fixing invokes, fixing little issues, little borrow checks, race conditions that human eyes can not catch etc.
