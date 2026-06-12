@@ -153,8 +153,7 @@ fn main() {
             save_global_widgets,
             update_widget_position,
             cancel_library_download,
-
-            save_ai_wallpaper,
+            save_ai_widget,
         ])
         .setup(move |app| {
             // Initialize Discord RPC in the background

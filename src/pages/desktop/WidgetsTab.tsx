@@ -1,11 +1,12 @@
 import React from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { open as openDialog } from '@tauri-apps/plugin-dialog';
-import { FolderOpen, Trash2, Component, Power, ChevronDown, ChevronRight, Plus, XCircle, Lock, Unlock, RotateCcw } from 'lucide-react';
+import { FolderOpen, Trash2, Component, Power, ChevronDown, ChevronRight, Plus, XCircle, Lock, Unlock, RotateCcw, Wand2 } from 'lucide-react';
 import { useConfirm } from '../../context/ConfirmContext';
 import { convertFileSrc } from '@tauri-apps/api/core';
 import { PropertyControl, ColorwallProperty } from '../../components/InteractivePropertiesPanel';
 import MonitorSelectorModal from '../../components/MonitorSelectorModal';
+import AIWidgetGeneratorModal from '../../components/AIWidgetGeneratorModal';
 
 interface WidgetManifest {
     id: string;
@@ -40,6 +41,7 @@ export default function WidgetsTab() {
     const [expandedInstances, setExpandedInstances] = React.useState<Set<string>>(new Set());
     const [isMonitorSelectorOpen, setIsMonitorSelectorOpen] = React.useState(false);
     const [pendingWidgetToAdd, setPendingWidgetToAdd] = React.useState<WidgetManifest | null>(null);
+    const [isAiGeneratorOpen, setIsAiGeneratorOpen] = React.useState(false);
     const { showConfirm, showAlert } = useConfirm();
 
     const loadData = React.useCallback(async () => {
@@ -263,6 +265,12 @@ export default function WidgetsTab() {
                 onClose={handleCancelMonitorSelection}
                 onConfirm={handleConfirmMonitorSelection}
                 title="Select Monitors for Widget"
+            />
+            
+            <AIWidgetGeneratorModal 
+                isOpen={isAiGeneratorOpen} 
+                onClose={() => setIsAiGeneratorOpen(false)} 
+                onSuccess={() => loadData()} 
             />
 
             {/* ── active widgets section ── */}
@@ -523,34 +531,64 @@ export default function WidgetsTab() {
                     <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                         Widget Library
                     </div>
-                    <button
-                        onClick={handleImportWidget}
-                        style={{
-                            padding: '6px 12px',
-                            background: 'rgba(139, 92, 246, 0.12)',
-                            color: 'rgb(167, 139, 250)',
-                            border: '1px solid rgba(139, 92, 246, 0.25)',
-                            borderRadius: '8px',
-                            cursor: 'pointer',
-                            fontWeight: 600,
-                            fontSize: '11px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            transition: 'all 0.15s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.22)';
-                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(139, 92, 246, 0.12)';
-                            e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.25)';
-                        }}
-                    >
-                        <FolderOpen size={12} />
-                        Import
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                            onClick={() => setIsAiGeneratorOpen(true)}
+                            style={{
+                                padding: '6px 12px',
+                                background: 'rgba(16, 185, 129, 0.12)',
+                                 color: 'rgb(52, 211, 153)',
+                                border: '1px solid rgba(15, 147, 249, 0.25)',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: '11px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(15, 147, 249, 0.22)';
+                                e.currentTarget.style.borderColor = 'rgba(15, 147, 249, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(15, 147, 249, 0.12)';
+                                e.currentTarget.style.borderColor = 'rgba(15, 147, 249, 0.25)';
+                            }}
+                        >
+                            <Wand2 size={12} />
+                            Generate With AI
+                        </button>
+                        <button
+                            onClick={handleImportWidget}
+                            style={{
+                                padding: '6px 12px',
+                                background: 'rgba(139, 92, 246, 0.12)',
+                                color: 'rgb(167, 139, 250)',
+                                border: '1px solid rgba(139, 92, 246, 0.25)',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontWeight: 600,
+                                fontSize: '11px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                transition: 'all 0.15s ease',
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.22)';
+                                e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.4)';
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.background = 'rgba(139, 92, 246, 0.12)';
+                                e.currentTarget.style.borderColor = 'rgba(139, 92, 246, 0.25)';
+                            }}
+                        >
+                            <FolderOpen size={12} />
+                            Import
+                        </button>
+                    </div>
                 </div>
 
                 {loading ? (

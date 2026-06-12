@@ -120,3 +120,109 @@ CRITICAL: Do NOT ask the user any questions. Always output the full analysis fol
 
     return full;
 }
+
+export async function runFoundryIQWidgetGeneration(
+    userPrompt: string,
+    onChunk: (text: string) => void,
+): Promise<string> {
+    const { endpoint, key, model } = getConfig();
+    if (!endpoint || !key) throw new Error('foundry iq not configured');
+    
+    const docs = buildFullDocsText();
+    const systemPrompt = `You are an expert web developer for ColorWall, a desktop wallpaper engine.
+You are NOT a chatbot. You NEVER ask clarifying questions. You ALWAYS produce the complete technical analysis AND the final widget code in a single response.
+ACCURATELY check and follow the api and rules, Use the integrated Knowledge, if Not avialable, use the passed one here, it is enough; AND GENERATE An ACCURATE WIDGET, NOT A GENERIC ONE AT THAT TOO. USUALLY GO FOR MINIMALISM OR AESTHETICALLY PLEASING THAN BIG OR TOO ATTENTION GRABBING.
+=== (source: ColorWall API Docs, exactly same as in foundry knowledgebase) ===
+${docs}
+=== FRONTEND DESIGN GUIDELINES ===
+${frontendDesignSkill}
+=== END INSTRUCTIONS ===
+
+You MUST respond in this EXACT structure, in this order:
+
+## Query Decomposition
+Break the request into 2-4 sub-queries identifying what capabilities/apis are needed.
+Write condensed code instead of verbose, like a smart developer will, instead of being verbose and repetitive write it more smartly than being a brute.
+
+## Knowledge Source Results
+For EACH relevant API, produce a cited entry:
+- [ref_0] (indexedKnowledgeBase) \`colorwallAudioListener(data)\` — description of what this api does.
+
+## Implementation Plan
+A numbered list of exactly what the widget code should do, referencing [ref_N] for each api used. Be technically explicit.
+
+## Generated Widget Code
+Output the raw condensed HTML for the widget inside a single HTML code block.
+Rules for the HTML:
+1. Start with <!DOCTYPE html> and end with </html>.
+2. Use the exact API patterns cited above. All data arrives as JSON strings!
+3. All CSS in <style>, all JS in <script>.
+4. Body MUST have: margin:0; padding:0; overflow:hidden; background:transparent;
+5. The widget should be compact, floating, and have rounded corners/glassmorphism if appropriate. Do NOT make it full screen! Use fixed sizes or content-fit for the main container.
+6. Handle cases where no data is available yet gracefully.
+7. MUST be inside \`\`\`html ... \`\`\`
+8. Use CDNs for any required libraries.
+9. Avoid heavy performance elements. This is a widget overlay.
+
+CRITICAL: Do NOT ask the user any questions. Always output the full analysis followed by the HTML code block.`;
+
+    const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`,
+        },
+        body: JSON.stringify({ 
+            model, 
+            messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: `Analyze and generate the complete widget HTML file now for the following request: "${userPrompt}"` }
+            ], 
+            stream: true, 
+            temperature: 0.5,
+            max_tokens: 4096
+        }),
+    });
+
+    if (!res.ok) {
+        const err = await res.text();
+        throw new Error(`foundry iq error ${res.status}: ${err}`);
+    }
+
+    const reader = res.body?.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let full = '';
+
+    if (!reader) throw new Error('no response stream');
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split('\n');
+            
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') continue;
+                    
+                    try {
+                        const parsed = JSON.parse(data);
+                        const token = parsed.choices[0]?.delta?.content || '';
+                        if (token) {
+                            full += token;
+                            onChunk(token);
+                        }
+                    } catch (e) {
+                        // ignore parse errors for partial chunks
+                    }
+                }
+            }
+        }
+        return full;
+    } catch (e) {
+        throw e;
+    }
+}

@@ -22,6 +22,49 @@ pub async fn save_ai_wallpaper(
 }
 
 #[tauri::command]
+pub async fn save_ai_widget(
+    prompt: String,
+    html: String,
+) -> Result<WallpaperResponse, String> {
+    println!("[ai] Saving generated widget...");
+
+    let app_data = crate::data::storage::get_app_data_dir()
+        .map_err(|e| e.to_string())?;
+    
+    let timestamp = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
+        
+    let folder_name = format!("ai_widget_{}", timestamp);
+    let folder_path = app_data.join("widgets").join(&folder_name);
+    
+    std::fs::create_dir_all(&folder_path).map_err(|e| format!("Failed to create folder: {}", e))?;
+    
+    let html_path = folder_path.join("index.html");
+    std::fs::write(&html_path, html).map_err(|e| format!("Failed to write index.html: {}", e))?;
+    
+    let widget_json = serde_json::json!({
+        "id": folder_name,
+        "name": format!("AI Widget: {}", prompt.chars().take(20).collect::<String>()),
+        "description": prompt,
+        "author": "Foundry IQ",
+        "entry": "index.html",
+        "builtin": false
+    });
+    
+    let json_path = folder_path.join("widget.json");
+    std::fs::write(&json_path, serde_json::to_string_pretty(&widget_json).unwrap())
+        .map_err(|e| format!("Failed to write widget.json: {}", e))?;
+
+    Ok(WallpaperResponse {
+        success: true,
+        message: Some(folder_path.to_string_lossy().to_string()),
+        error: None,
+    })
+}
+
+#[tauri::command]
 pub async fn download_ai_video_background(
     folder_path: String,
     video_url: String,
