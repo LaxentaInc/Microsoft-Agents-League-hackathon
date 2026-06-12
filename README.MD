@@ -47,8 +47,11 @@ Here's what it actually looks like when the engine enumerates the shell hierarch
 [diag] target WorkerW (after defview parent): Some(HWND(0x1049c))
 [diag] monitor #1: "\\.\DISPLAY1" rect=(0,0,1920,1080) 1920x1080 primary=true
 [diag] total monitors: 1
-[diag] virtual screen: origin=(0,0) size=1920x1080
-```
+### Architecture
+
+<div align="center">
+  <img src="src/assets/architecture_diagram.svg" alt="ColorWall Architecture Diagram" width="900" />
+</div>
 
 ```mermaid
 graph TD
