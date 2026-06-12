@@ -73,7 +73,8 @@ const BUILTIN_WIDGETS: &[BuiltinWidgetData] = &[
 
 /// get all available widgets (builtin + user)
 pub fn list_all_widgets() -> Vec<WidgetManifest> {
-    let mut result = Vec::new();
+    let mut user_widgets = Vec::new();
+    let mut builtin_widgets = Vec::new();
 
     // load built-in widgets
     for bw in BUILTIN_WIDGETS {
@@ -82,24 +83,38 @@ pub fn list_all_widgets() -> Vec<WidgetManifest> {
             if let Some(app_version) = option_env!("CARGO_PKG_VERSION") {
                 manifest.version = Some(app_version.to_string());
             }
-            result.push(manifest);
+            builtin_widgets.push(manifest);
         }
     }
 
     // load user widgets from appdata
     if let Ok(user_dir) = get_user_widgets_dir() {
         if let Ok(entries) = std::fs::read_dir(&user_dir) {
-            for entry in entries.flatten() {
+            let mut folders: Vec<_> = entries.flatten().collect();
+            // sort by creation time descending so newest appear first
+            folders.sort_by(|a, b| {
+                let time_a = a.metadata().ok()
+                    .and_then(|m| m.created().or_else(|_| m.modified()).ok())
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                let time_b = b.metadata().ok()
+                    .and_then(|m| m.created().or_else(|_| m.modified()).ok())
+                    .unwrap_or(std::time::SystemTime::UNIX_EPOCH);
+                time_b.cmp(&time_a)
+            });
+            for entry in folders {
                 let path = entry.path();
                 if path.is_dir() {
                     if let Some(manifest) = scan_widget_folder(&path, false) {
-                        result.push(manifest);
+                        user_widgets.push(manifest);
                     }
                 }
             }
         }
     }
 
+    // user widgets first (newest at top), then builtins
+    let mut result = user_widgets;
+    result.extend(builtin_widgets);
     result
 }
 
