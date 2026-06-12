@@ -65,7 +65,7 @@ Here is how it achieves it natively on a real machine:
 </div>
 
 <details>
-<summary><b>Mermaid Diagram (click to expand)</b></summary>
+<summary><h1 align="center">Mermaid Diagram (click to expand)</h1></summary>
 
 ```mermaid
 graph TD
