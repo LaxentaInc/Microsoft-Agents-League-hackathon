@@ -36,7 +36,7 @@ _Explaining everything i know and did will take too long and no one will really 
 
 Here is how it achieves it natively on a real machine:
 
-***[diag] windows build number: 19045
+```***[diag] windows build number: 19045
 [diag] is_windows_11_or_later: false
 [diag] progman handle: HWND(0x10188)
 [diag] explorer patcher detected: false
@@ -54,6 +54,7 @@ Here is how it achieves it natively on a real machine:
 [diag] monitor #1: "\\.\DISPLAY1" rect=(0,0,1920,1080) 1920x1080 primary=true
 [diag] total monitors: 1
 [diag] virtual screen: origin=(0,0) size=1920x1080***
+```
 
 ---
 
