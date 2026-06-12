@@ -116,6 +116,4 @@ graph TD
 
 **Watchdog** — Background thread that monitors webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
 
-## Built with AI
-
-GitHub Copilot and FoundryIQ were used throughout development — debugging Win32 handle issues, reading crash dumps, working through shell hierarchy problems. ColorWall is an app built with AI assistance that lets users create with AI. That's the whole pitch.
+GitHub Copilot and FoundryIQ were used throughout development for debugging Win32 handle issues, reading crash dumps, working through front end and fixing invokes, fixing little issues, little borrow checks, race conditions that human eyes can not catch etc.

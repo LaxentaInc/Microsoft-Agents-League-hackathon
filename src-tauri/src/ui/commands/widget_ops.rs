@@ -245,6 +245,13 @@ pub async fn remove_widget_from_desktop(app: AppHandle, instance_id: String) -> 
         Err(e) => return WidgetConfigResponse { success: false, config: None, error: Some(e) },
     };
 
+    // grab the monitor id from the instance before we remove it
+    let monitor_id = config.widgets.iter()
+        .find(|w| w.instance_id == instance_id)
+        .and_then(|w| w.monitor_id.clone())
+        .unwrap_or_else(|| crate::core::ipc::resolve_primary_id());
+    let clean_id = crate::core::ipc::sanitize_monitor_id(&monitor_id);
+
     // remove from config
     config.widgets.retain(|w| w.instance_id != instance_id);
 
@@ -252,11 +259,10 @@ pub async fn remove_widget_from_desktop(app: AppHandle, instance_id: String) -> 
         return WidgetConfigResponse { success: false, config: None, error: Some(e) };
     }
 
-    // live-remove from the webview
-    let monitor_id = crate::core::ipc::resolve_primary_id();
-    let _ = widget_host::remove_widget_live(&app, &monitor_id, &instance_id);
+    // live-remove from the webview (using the actual monitor, not just primary)
+    let _ = widget_host::remove_widget_live(&app, &clean_id, &instance_id);
 
-    // if no more global widgets, stop the host to free resources
+    // if no more global widgets on any monitor, stop all hosts to free resources
     if config.widgets.is_empty() {
         let _ = widget_host::stop_all_widget_hosts(&app);
     }
@@ -271,6 +277,16 @@ pub async fn remove_widget_from_desktop(app: AppHandle, instance_id: String) -> 
 /// kill all global widgets and stop the widget host — full cleanup
 #[tauri::command]
 pub async fn kill_all_widgets(app: AppHandle) -> WidgetConfigResponse {
+    // load current config so we can live-remove each widget from its webview
+    if let Ok(config) = widgets::load_global_widget_config() {
+        for instance in &config.widgets {
+            let monitor_id = instance.monitor_id.clone()
+                .unwrap_or_else(|| crate::core::ipc::resolve_primary_id());
+            let clean_id = crate::core::ipc::sanitize_monitor_id(&monitor_id);
+            let _ = widget_host::remove_widget_live(&app, &clean_id, &instance.instance_id);
+        }
+    }
+
     // clear the global config
     let empty_config = SceneWidgetConfig { widgets: vec![] };
     let _ = widgets::save_global_widget_config(&empty_config);
