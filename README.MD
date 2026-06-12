@@ -6,7 +6,7 @@
 
 ---
 
-> I wrote this whole thing by hand. Apologies in advance for any mistakes.
+> Hello! I wish you a happy day, anyways here is the breakdown of the project:
 
 ## What is ColorWall?
 
