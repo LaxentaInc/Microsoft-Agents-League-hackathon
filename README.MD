@@ -1,36 +1,42 @@
 <div align="center">
-  <img src="src/assets/LxColorWall.png" alt="ColorWall Logo" width="600" />
-  <p>A native desktop customization engine for Windows 10/11, built in Rust/Tauri.</p>
+  <img src="src/assets/LxColorWall.png" alt="ColorWall" width="600" />
+  <br/><br/>
+  <p>A blazing-fast desktop customization engine built in Rust/Tauri for Windows 10/11, For Performance and Visuals!</p>
   <p><i>Submitted to Agents League @ AISF 2026 — Creative Apps track, integrated with Foundry IQ</i></p>
 </div>
 
 ---
 
-> Hello! I wish you a happy day, anyways here is the breakdown of the project:
+**_i have written this whole description with my hands, i am sorry in advanced if i made mistakes or it is not perfect enough, i tried my best!_**
+
+---
 
 ## What is ColorWall?
 
-ColorWall is a desktop customization suite that combines native Windows API integration with AI generation to produce interactive wallpapers and desktop widgets on demand. It's not a theme pack or a skin — it renders live HTML/CSS/JS content directly underneath your desktop icons using WorkerW injection, with no overlay window and no interference with your actual desktop.
+ColorWall is not just another wallpaper app. It is a **fully native**, hyper-optimized desktop customization suite that uses the absolute limits of the Windows API alongside cutting-edge **Agentic AI** to dynamically generate interactive wallpapers and functional desktop widgets _on the fly_.
 
-The AI side is driven by **FoundryIQ**, which takes a plain-text prompt, generates a fully functional interactive wallpaper, and grounds it against ColorWall's documented JavaScript API so the output works correctly every time.
+It renders **live HTML/CSS/JS** content directly _underneath_ your desktop icons using **WorkerW injection** — no overlay window, no interference with your actual desktop, your icons sit right on top like nothing changed. Except now your entire desktop is alive.
+
+---
 
 ## FoundryIQ Integration
 
-ColorWall exposes a documented JS API purpose-built for AI-generated content (CW-API). The generation flow works like this:
+**FoundryIQ Integration:** ColorWall exposes a documented JavaScript API specifically designed for AI-generated content.
 
-1. User writes a prompt.
-2. FoundryIQ generates the HTML/JS, strictly grounded against the CW-API knowledge base — both as the primary instruction and as a fallback, so it essentially never hallucinates an invalid API call.
-3. The output gets saved to your local interactive collection.
-4. On activation, the Rust backend performs shell enumeration to locate (or create) the correct `WorkerW` handle, then attaches a Tauri Webview2 window into it. Your icons sit on top. Nothing breaks.
+- Users describe a wallpaper or widget in natural language, and FoundryIQ agent generates checks the Knowledge Base, Which is ALSO passed in the instructions as a **fallback**, so it never goes wrong,
+- Then The App handles the resulting Output, Saves it in the same interactive page with other ones, and On demand _Sets_ the Interactive HTML/CSS/JS wallpaper using **Shell Enumeration** To find the correct workerw handle (or create it) in the hierarchy, setting the audio-reactive, mouse-interactive, and rendered via webview2.
 
-The choice of Webview2 over DirectX11 for interactives was deliberate — HTML/CSS/JS is a domain LLMs understand deeply, which means far less hallucination compared to asking them to write raw HLSL shaders. The tradeoff in raw performance is worth the accuracy gain.
+I used **Tauri Webview2** instead of DirectX11 for _interactives/widgets_, giving the generated content an even broader scope for effects + provides ease of creation with AI; reducing inaccuracy and hallucinations because webview2 is a well known concept, that is considering for the ease of usage, cz **HTML/CSS** is what most people can do simply using AI. than sit and play with sliders for a simple interactive wallpaper...
 
-### Shell Enumeration
+---
 
-Here's what it actually looks like when the engine enumerates the shell hierarchy on a real machine:
+## Shell Enumeration
 
-```text
-[diag] windows build number: 19045
+_Explaining everything i know and did will take too long and no one will really read it, i will just show:-_
+
+Here is how it achieves it natively on a real machine:
+
+***[diag] windows build number: 19045
 [diag] is_windows_11_or_later: false
 [diag] progman handle: HWND(0x10188)
 [diag] explorer patcher detected: false
@@ -47,13 +53,18 @@ Here's what it actually looks like when the engine enumerates the shell hierarch
 [diag] target WorkerW (after defview parent): Some(HWND(0x1049c))
 [diag] monitor #1: "\\.\DISPLAY1" rect=(0,0,1920,1080) 1920x1080 primary=true
 [diag] total monitors: 1
-### Architecture
+[diag] virtual screen: origin=(0,0) size=1920x1080***
+
+---
+
+## Architecture
 
 <div align="center">
-  <img src="src/assets/architecture_diagram.svg" alt="ColorWall Architecture Diagram" width="900" />
+  <img src="src/assets/architecture_diagram.svg" alt="ColorWall Architecture" width="900" />
 </div>
-```
 
+<details>
+<summary><b>Mermaid Diagram (click to expand)</b></summary>
 
 ```mermaid
 graph TD
@@ -96,26 +107,43 @@ graph TD
     end
 ```
 
-## Other Features
+</details>
 
-**Taskbar styling**  Acrylic, blur, and transparent taskbar effects. Works on both Win10 and Win11. The Start Menu is not hooked because Microsoft doesn't expose those APIs.
+---
 
-**Local library & offline support**  Works fully offline. All wallpaper types (static, video, interactive, widget) can be downloaded from the built-in store and run locally.
+## More Features
 
-**Dual video renderer** WMF (Windows Media Foundation) for native decoding, and MPV with extreme performance presets going up to spline36/EWA Lanczos for lossless playback.
+Since i knew about these things and thought it will be great to add, i went ahead and->
 
-**Real-time audio API** 128 frequency bands via WASAPI loopback + 2048-point FFT with Hann windowing, exposed to wallpaper JS. Includes bass-energy-driven smoothing so visualizers look alive even during quiet passages.
+- **Taskbar modification** with acrylic, blur, transparent type stylings, well it only works for taskbar, Does not work with Windows 11 start menu, or Windows 10 Start Menu because windows runs them differently and there is no api to start menu i know about!
 
-**Mouse forwarding** Polls `GetCursorPos` and `GetAsyncKeyState`, converts screen coords to viewport-local using each window's position and scale factor, then dispatches synthetic `MouseEvent` + `PointerEvent` to all active webviews including canvases.
+- **Local Wallpaper/Video/Interactives/Widget Support** so. + Can download from the store to the Library!! **Offline Usage** is Great!
 
-**Media integration** Uses Windows `GlobalSystemMediaTransportControlsSessionManager` to read the currently playing track (title, artist, album art) and forward it to wallpapers/widgets via `colorwallCurrentTrack()`.
+- Two different **renderer plugins**, For windows media foundation (the wallpaper-player.exe is a Plugin, and launches specifically with WMF/MPV engine, and runs for Video type wallpapers) and **Mpv** with performance presets, going upto as high as _spline36_ and _ewa lanczos_ for lossless performance.
 
-**System telemetry** CPU usage, available RAM, and network throughput polled via `sysinfo` and forwarded to webviews via `colorwallSystemInformation()` every 3 seconds.
+- **Discord RPC**, because i had previously made it for a prototype i am making for linux app and it was easy to implement with ai here
 
-**Content aggregator** Built-in store with a large catalog of 4K wallpapers. FoundryIQ also pulls a random 4K video from the aggregator as the base background for generated interactives.
+- **Pretty Good one out of Extras:** Content Store! best part, i have already made A lot of aggregators in past! So i went ahead and added one here for _Fair_ use, so when FoundryIQ is done generating the Interactive from the API correctly, as it is instructed it will make place for a bg video, and the code will go ahead, get a random 4k video and implement it in it, Boom, making it look **EVEN** better!
 
-**Discord RPC** Shows your current wallpaper to friends. Carried over from a previous project, took basically no time to add.
+---
 
-**Watchdog** Background thread that monitors webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
+## Data Forwarders
 
-GitHub Copilot and FoundryIQ were used throughout development for debugging Win32 handle issues, reading crash dumps, working through front end and fixing invokes, fixing little issues, little borrow checks, race conditions that human eyes can not catch etc.
+The engine runs **four background forwarder threads** that continuously push real-time data into every active wallpaper and widget webview:
+
+| Forwarder | Source | JS Callback | Rate |
+|---|---|---|---|
+| **Audio** | WASAPI loopback, 128 bands, 2048-pt FFT + Hann window | `colorwallAudioListener()` | ~30fps |
+| **Mouse** | `GetCursorPos` + `GetAsyncKeyState`, screen→viewport conversion | Synthetic `MouseEvent` / `PointerEvent` | ~15fps |
+| **Media** | `GlobalSystemMediaTransportControlsSessionManager` | `colorwallCurrentTrack()` | 1s poll |
+| **System** | `sysinfo` crate (CPU, RAM, Network) | `colorwallSystemInformation()` | 3s poll |
+
+The API also includes zero-JS data binding via `data-cw-*` attributes — `data-cw-time`, `data-cw-media`, `data-cw-system`, etc. so widgets can display live data without writing a single line of JavaScript.
+
+**Watchdog** runs in the background monitoring webview health, detects stalled or crashed renders, and handles cleanup so nothing lingers after a wallpaper swap.
+
+---
+
+## Built with AI
+
+Usage of **Copilot** and **Foundry IQ** (in interactives and widgets tab), happened throughout development, for specific researches and fixes, finding log dumps, crashes etc and discussing issues! debugging Win32 handle issues, reading crash dumps, working through front end and fixing invokes, fixing little issues, little borrow checks, race conditions that human eyes can not catch etc.
