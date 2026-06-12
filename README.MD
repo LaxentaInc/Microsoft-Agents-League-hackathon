@@ -2,7 +2,7 @@
   <img src="src/assets/LxColorWall.png" alt="ColorWall" width="600" />
   <br/><br/>
   <p>A blazing-fast desktop customization engine built in Rust/Tauri for Windows 10/11, For Performance and Visuals!</p>
-  <p><i>Submitted to Agents League @ AISF 2026 — Creative Apps track, integrated with Foundry IQ</i></p>
+  <p><i>Submitted to Agents League @ AISF 2026, Creative Apps track, integrated with Foundry IQ</i></p>
 </div>
 
 ---
