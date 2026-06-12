@@ -50,7 +50,8 @@ pub async fn save_ai_widget(
         "description": prompt,
         "author": "Foundry IQ",
         "entry": "index.html",
-        "builtin": false
+        "builtin": false,
+        "draggable": true
     });
     
     let json_path = folder_path.join("widget.json");
