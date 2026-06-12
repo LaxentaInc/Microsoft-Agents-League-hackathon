@@ -1,0 +1,321 @@
+// prevents console window on windows in release builds
+// main tauri entry point for loading everything together
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+
+use tauri::{Manager, WindowEvent};
+use wallpaperengine::core::lifecycle::restore_wallpaper_on_startup;
+use wallpaperengine::core::player::app_management::start_renderer_watchdog;
+use wallpaperengine::core::player::manager::shutdown_video_wallpaper;
+use wallpaperengine::core::player::state::periodic_state_save;
+use wallpaperengine::core::lifecycle::wait_for_system_ready;
+use wallpaperengine::platform::windows::interactive::watchdog::start_interactive_watchdog;
+use wallpaperengine::ui::commands::*;
+
+// helper to apply window vibrancy
+fn apply_vibrancy_if_enabled(app: tauri::AppHandle) {
+    tauri::async_runtime::spawn(async move {
+        // small delay to ensure window is ready
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        if let Ok(response) = get_settings().await {
+            if let Some(settings) = response.settings {
+                if settings.window_vibrancy {
+                    let _ = set_window_vibrancy(app, true);
+                }
+            }
+        }
+    });
+}
+
+// helper to create or show the main ui window
+fn show_main_window(app: &tauri::AppHandle) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.show();
+        let _ = window.set_focus();
+        let _ = window.unminimize();
+        println!("[main] existing window focused");
+    } else {
+        println!("[main] window doesn't exist, recreating...");
+        use tauri::{WebviewUrl, WebviewWindowBuilder};
+        let _ = WebviewWindowBuilder::new(app, "main", WebviewUrl::default())
+            .title("ColorWall - Wallpaper Engine @2026 Laxenta Inc")
+            .inner_size(1200.0, 950.0)
+            .min_inner_size(900.0, 600.0)
+            .resizable(true)
+            .decorations(false)
+            .transparent(true)
+            .build();
+
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }
+
+    // reapply vibrancy settings to ensure they are active after showing
+    apply_vibrancy_if_enabled(app.clone());
+}
+
+fn main() {
+    // Check if running in autostart mode (silently from system tray)
+    let args: Vec<String> = std::env::args().collect();
+    let is_autostart = args
+        .iter()
+        .any(|arg| arg == "--autostart" || arg == "/autostart");
+
+    if is_autostart {
+        println!("[main] Starting in autostart mode (tray only)");
+    } else {
+        println!("[main] Starting in normal mode (show window)");
+    }
+
+    tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(
+            tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+                // when a second instance is launched, focus the existing window
+                println!("[main] second instance detected, focusing existing window");
+                show_main_window(app);
+            })
+        )
+        .invoke_handler(tauri::generate_handler![
+            search_wallpapers,
+            fetch_live2d,
+            resolve_wallpaperflare_highres,
+            resolve_motionbgs_video,
+            resolve_wallpaperwaifu_video,
+            resolve_wallpapersclan_highres,
+            resolve_desktophut_video,
+            resolve_konachan_highres,
+            autocomplete_tags,
+            get_cached_tag_count,
+            set_wallpaper,
+            get_current_wallpaper,
+            get_cache_size,
+            clear_cache,
+            set_video_wallpaper,
+            stop_video_wallpaper_command,
+            get_video_wallpaper_status,
+            list_user_wallpapers,
+            upload_user_wallpaper,
+            delete_user_wallpaper,
+            register_local_wallpaper,
+            set_local_wallpaper,
+            set_local_video_wallpaper,
+            get_wallpaper_storage_path,
+            download_wallpaper,
+            download_to_library,
+            is_in_library,
+            get_settings,
+            save_settings,
+            validate_mpv_path,
+            get_startup_enabled,
+            set_startup_enabled,
+            get_username,
+            set_discord_rpc_window_focus,
+            get_system_info,
+            get_monitors,
+            toggle_monitor_wallpaper,
+            get_active_monitors,
+            configure_taskbar,
+            set_window_vibrancy,
+            download_homepage_asset,
+            get_monitor_wallpaper_info,
+            set_video_wallpaper_on_monitors,
+            list_interactive_wallpapers,
+            import_interactive_wallpaper,
+            save_ai_wallpaper,
+            download_ai_video_background,
+            set_interactive_wallpaper,
+            stop_interactive_wallpaper,
+            stop_interactive_wallpaper_on_monitor,
+            get_active_interactive_monitors,
+            get_interactive_properties,
+            update_interactive_property,
+            delete_interactive_wallpaper,
+            download_and_setup_mpv,
+            check_mpv_installed,
+            download_interactive_assets,
+            resync_interactive_assets,
+            check_interactive_assets_installed,
+            check_interactive_assets_downloading,
+            list_widgets,
+            get_widget_preview_html,
+            get_widget_config,
+            save_widget_config,
+            import_widget,
+            delete_widget,
+            get_global_widgets,
+            spawn_widget_on_desktop,
+            remove_widget_from_desktop,
+            kill_all_widgets,
+            save_global_widgets,
+            update_widget_position,
+            cancel_library_download,
+
+            save_ai_wallpaper,
+        ])
+        .setup(move |app| {
+            // Initialize Discord RPC in the background
+            wallpaperengine::core::discord_rpc::init_discord_rpc();
+
+            let window = app.get_webview_window("main").unwrap();
+
+            // restore window vibrancy from settings
+            apply_vibrancy_if_enabled(app.handle().clone());
+
+            let _app_handle = app.handle().clone();
+            let window_clone = window.clone();
+            window.on_window_event(move |event| {
+                if let WindowEvent::CloseRequested { api, .. } = event {
+                    // prevent the window from being totally destroyed
+                    api.prevent_close();
+                    
+                    // the App.tsx knows when the window is hidden and will unmount the React DOM 
+                    // completely to drop GPU usage to 0%.
+                    let _ = window_clone.hide();
+                    
+                    println!(
+                        "[main] Close button clicked - UI hidden to tray, wallpaper continues in background"
+                    );
+                }
+            });
+
+            // systray
+            
+            use tauri::menu::{Menu, MenuItem};
+            use tauri::tray::{MouseButton, TrayIconBuilder};
+            let show_item =
+                MenuItem::with_id(app, "show", "Show Window", true, None::<&str>).unwrap();
+            let quit_item = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>).unwrap();
+            let menu = Menu::with_items(app, &[&show_item, &quit_item]).unwrap();
+
+            let app_handle_for_tray = app.handle().clone();
+            let _tray = TrayIconBuilder::new()
+                .icon(app.default_window_icon().unwrap().clone())
+                .menu(&menu)
+                .on_menu_event(move |app, event| match event.id.as_ref() {
+                    "show" => {
+                        show_main_window(app);
+                    }
+                    "quit" => {
+                        println!("[main] Quit requested from tray");
+                        // stop interactive webviews (iw_*) and clear WEB_PLAYER_LABELS so the
+                        // forwarder threads (audio/mouse/system/media) see an empty label set
+                        // and exit their loops cleanly instead of firing one more cycle into
+                        // a dead webview. shutdown_video_wallpaper doesn't touch these —
+                        // it only kills the separate wallpaper-player.exe child processes.
+                        let _ = wallpaperengine::platform::windows::interactive::player::stop_all_interactive_wallpapers(&app_handle_for_tray);
+                        // widget host windows (wh_*) are also tauri webviews but they get
+                        // destroyed automatically by app.exit() below, no explicit stop needed.
+                        // shutdown_video_wallpaper → stop_all_players() sends STOP via named
+                        // pipe, waits up to 1s for graceful exit, then force-kills. by the time
+                        // it returns, all player processes are dead no extra sleep needed.
+                        let _ = shutdown_video_wallpaper(&app_handle_for_tray);
+                        app.exit(0);
+                    }
+                    _ => {}
+                })
+                .on_tray_icon_event(|tray, event| {
+                    if let tauri::tray::TrayIconEvent::Click {
+                        button: MouseButton::Left,
+                        ..
+                    } = event
+                    {
+                        show_main_window(tray.app_handle());
+                    }
+                })
+                .build(app)
+                .unwrap();
+
+            // init Taskbar
+            {
+                use wallpaperengine::platform::windows::os::taskbar::init_taskbar_keeper;
+                init_taskbar_keeper();
+                println!("[main] Taskbar keeper initialized");
+
+                // enable autostart by default in production builds (first run)
+                // if user later disables it in settings, that's respected
+                #[cfg(not(debug_assertions))]
+                {
+                    use wallpaperengine::platform::windows::os::windows_startup;
+                    if !windows_startup::is_startup_enabled() {
+                        println!("[main] enabling autostart (production default)");
+                        let _ = windows_startup::set_startup_enabled(true);
+                    }
+                }
+            }
+
+            // restore wallpaper on startup in background task
+            let app_handle = app.handle().clone();
+            
+            tauri::async_runtime::spawn(async move {
+                if let Ok(settings_res) = get_settings().await {
+                    if let Some(settings) = settings_res.settings {
+                        wallpaperengine::core::discord_rpc::apply_settings(
+                            settings.discord_rpc_enabled,
+                            settings.discord_custom_status,
+                            settings.discord_custom_details,
+                        );
+                    }
+                }
+                
+                // wallpaper restoration — iassets download removed from startup (now user-triggered)
+                // wait for system to be fully ready
+                let _system_ready = wait_for_system_ready(15).await;
+                
+                // show window AFTER system ready but BEFORE restoration (only if normal launch)
+                // this lets user see the loading screen during restoration
+                if !is_autostart {
+                    println!("[startup] Showing window with loading screen (normal launch)");
+                    
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                    
+                    // give React time to mount and render loading screen [should work, and not show transparent window]
+                    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+                }
+
+                println!("[startup] attempting wallpaper restoration");
+                
+                match restore_wallpaper_on_startup(&app_handle).await {
+                    Ok(_) => {
+                        println!("[startup] restoration completed");
+                    }
+                    Err(e) => {
+                        eprintln!("[startup] error: failed to restore wallpaper: {}", e);
+                    }
+                }
+                
+                // also try to restore global widgets
+                {
+                    println!("[startup] attempting widget restoration");
+                    wallpaperengine::platform::windows::interactive::widget_host::restore_global_widgets(&app_handle);
+                }
+                
+                if is_autostart {
+                    println!("[startup] Staying in tray (autostart mode)");
+                }
+            });
+
+            // Periodic state saving to prevent data loss (every 30 seconds)
+            // TODO: make this dynamic than hardcoded, but whatever for now, i focus on more imp things
+            tauri::async_runtime::spawn(async move {
+                loop {
+                    tokio::time::sleep(tokio::time::Duration::from_secs(30)).await;
+                    periodic_state_save();
+                }
+            });
+
+            // renderer watchdog — auto-restarts crashed wallpaper-player processes
+            start_renderer_watchdog(app.handle().clone());
+            start_interactive_watchdog(app.handle().clone());
+
+            Ok(())
+        })
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}

@@ -1,7 +1,7 @@
 note to self:
 The files inside the folder are not used by the sidercar binary. 
 DO not forget, you goldfish! check player_main.rs if you forget!
-
+hackathon deadline is 14, DO NOT FORGET, ITS ONLY SOME DAYS LEFT
 ### ~~NEW IDEA -> UHHH instead of checking .is_null(), return an Option Option<HWND> ? for rust safety~~
 ~~WINDOWS UTILS.RS LINE 28~~
 **DONE** — `get_progman()` and `get_worker_w()` now return `Option<HWND>`
