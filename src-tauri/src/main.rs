@@ -154,6 +154,7 @@ fn main() {
             update_widget_position,
             cancel_library_download,
             save_ai_widget,
+            generate_foundry_iq_stream,
         ])
         .setup(move |app| {
             // Initialize Discord RPC in the background

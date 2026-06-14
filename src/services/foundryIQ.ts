@@ -1,20 +1,16 @@
 // foundry iq service, not exposing credentials as advised by microsoft!
 import { buildFullDocsText } from '../pages/desktop/ApiDocsTab';
-
-const getConfig = () => ({
-    endpoint: import.meta.env.VITE_AZURE_FOUNDRY_ENDPOINT,
-    key: import.meta.env.VITE_AZURE_FOUNDRY_KEY,
-    model: import.meta.env.VITE_AZURE_FOUNDRY_MODEL,
-});
 import { frontendDesignSkill } from '../components/Skills';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
 // streams a chat completion from the endpoint, calling onChunk for each token
 export async function runFoundryIQGeneration(
     userPrompt: string,
     onChunk: (text: string) => void,
 ): Promise<string> {
-    const { endpoint, key, model } = getConfig();
-    if (!endpoint || !key) throw new Error('foundry iq not configured');
-    
     const docs = buildFullDocsText();
 // this is to make it even accurate, and agnostic, because even a slight mistake can cause failures,
 // taking precautions, explitictly telling the design choices, all over again, and adding failsafes.
@@ -69,55 +65,28 @@ You are highly encouraged to use CDNs for powerful libraries to create stunning 
 
 CRITICAL: Do NOT ask the user any questions. Always output the full analysis followed by the HTML code block.`;
 
-    const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`,
-        },
-        body: JSON.stringify({ 
-            model, 
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: `Analyze and generate the complete interactive wallpaper HTML file now for the following request: "${userPrompt}"` }
-            ], 
-            stream: true, 
-            temperature: 0.5,
-            max_tokens: 8192
-        }),
-    });
-
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`foundry iq error ${res.status}: ${err}`);
-    }
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder('utf-8');
+    const eventId = `foundry-iq-${generateId()}`;
     let full = '';
 
-    if (!reader) throw new Error('no response stream');
+    const unlisten = await listen<{ token: string }>(eventId, (event) => {
+        const text = event.payload.token;
+        full += text;
+        onChunk(text);
+    });
 
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value, { stream: true });
-        for (const line of chunk.split('\n')) {
-            if (!line.startsWith('data: ') || line === 'data: [DONE]') continue;
-            try {
-                const data = JSON.parse(line.slice(6));
-                const token = data.choices?.[0]?.delta?.content;
-                if (token) {
-                    full += token;
-                    onChunk(token);
-                }
-            } catch {
-                // partial json, skip
-            }
-        }
+    try {
+        await invoke('generate_foundry_iq_stream', {
+            prompt: `Analyze and generate the complete interactive wallpaper HTML file now for the following request: "${userPrompt}"`,
+            systemPrompt,
+            eventId,
+            maxTokens: 8192
+        });
+    } catch (e) {
+        unlisten();
+        throw new Error(`foundry iq error: ${e}`);
     }
 
+    unlisten();
     return full;
 }
 
@@ -125,9 +94,6 @@ export async function runFoundryIQWidgetGeneration(
     userPrompt: string,
     onChunk: (text: string) => void,
 ): Promise<string> {
-    const { endpoint, key, model } = getConfig();
-    if (!endpoint || !key) throw new Error('foundry iq not configured');
-    
     const docs = buildFullDocsText();
     const systemPrompt = `You are an expert web developer for ColorWall, a desktop wallpaper engine.
 You are NOT a chatbot. You NEVER ask clarifying questions. You ALWAYS produce the complete technical analysis AND the final widget code in a single response.
@@ -166,63 +132,27 @@ Rules for the HTML:
 
 CRITICAL: Do NOT ask the user any questions. Always output the full analysis followed by the HTML code block.`;
 
-    const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${key}`,
-        },
-        body: JSON.stringify({ 
-            model, 
-            messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: `Analyze and generate the complete widget HTML file now for the following request: "${userPrompt}"` }
-            ], 
-            stream: true, 
-            temperature: 0.5,
-            max_tokens: 4096
-        }),
-    });
-
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`foundry iq error ${res.status}: ${err}`);
-    }
-
-    const reader = res.body?.getReader();
-    const decoder = new TextDecoder('utf-8');
+    const eventId = `foundry-iq-${generateId()}`;
     let full = '';
 
-    if (!reader) throw new Error('no response stream');
+    const unlisten = await listen<{ token: string }>(eventId, (event) => {
+        const text = event.payload.token;
+        full += text;
+        onChunk(text);
+    });
 
     try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            const chunk = decoder.decode(value, { stream: true });
-            const lines = chunk.split('\n');
-            
-            for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                    const data = line.slice(6);
-                    if (data === '[DONE]') continue;
-                    
-                    try {
-                        const parsed = JSON.parse(data);
-                        const token = parsed.choices[0]?.delta?.content || '';
-                        if (token) {
-                            full += token;
-                            onChunk(token);
-                        }
-                    } catch (e) {
-                        // ignore parse errors for partial chunks
-                    }
-                }
-            }
-        }
-        return full;
+        await invoke('generate_foundry_iq_stream', {
+            prompt: `Analyze and generate the complete widget HTML file now for the following request: "${userPrompt}"`,
+            systemPrompt,
+            eventId,
+            maxTokens: 4096
+        });
     } catch (e) {
-        throw e;
+        unlisten();
+        throw new Error(`foundry iq error: ${e}`);
     }
+
+    unlisten();
+    return full;
 }
