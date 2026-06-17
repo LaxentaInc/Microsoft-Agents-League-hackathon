@@ -30,6 +30,27 @@ I used **Tauri Webview2** instead of DirectX11 for _interactives/widgets_, givin
 
 ---
 
+## Running the App in Dev environment:==>>>
+## Added just in case so it is clear
+
+to test the app in dev mode:
+
+```bash
+pnpm tauri dev
+# or
+npm run tauri dev
+```
+
+for a production build:
+
+```bash
+pnpm tauri build
+# or
+npm run tauri build
+```
+
+---
+
 ## Shell Enumeration
 
 _Explaining everything i know and did will take too long and no one will really read it, i will just show:-_
